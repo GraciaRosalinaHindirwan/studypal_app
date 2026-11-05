@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:studypal/components/app_text_field.dart';
 import 'package:studypal/components/task_card.dart';
-// import 'package:studypal/pages/add_task_page.dart';
+import 'package:studypal/pages/add_task_page.dart';
 import 'package:studypal/components/task_detail_dialog.dart';
+import 'package:studypal/pages/update_task_page.dart';
 import 'package:studypal/theme/app_colors.dart';
 
 class TaskPage extends StatefulWidget {
@@ -146,29 +147,34 @@ class _TaskPageState extends State<TaskPage> {
             ),
             const SizedBox(height: 24),
             for (final task in filteredTasks)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 32),
-                child: GestureDetector(
-                  onTap: () => showTaskDetail(task.title),
-                  child: TaskCard(
-                    title: task.title,
-                    dateTime: task.dateTime,
-                    isDone: task.isDone,
-                  ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 32),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const UpdateTaskPage()),
+                  );
+                },
+                child: TaskCard(
+                  title: task.title,
+                  dateTime: task.dateTime,
+                  isDone: task.isDone,
                 ),
               ),
+            ),
           ],
         ),
         Positioned(
           right: 24,
           bottom: 24,
           child: GestureDetector(
-            // onTap: () {
-            //   Navigator.push(
-            //     context,
-            //     MaterialPageRoute(builder: (_) => const AddTaskPage()),
-            //   );
-            // },
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AddTaskPage()),
+              );
+            },
             child: Container(
               width: 50,
               height: 50,
