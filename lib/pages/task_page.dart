@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:studypal/components/text_field.dart';
+import 'package:studypal/components/app_text_field.dart';
 import 'package:studypal/components/task_card.dart';
 // import 'package:studypal/pages/add_task_page.dart';
+import 'package:studypal/components/task_detail_dialog.dart';
 import 'package:studypal/theme/app_colors.dart';
 
 class TaskPage extends StatefulWidget {
@@ -13,12 +14,44 @@ class TaskPage extends StatefulWidget {
 
 class _TaskPageState extends State<TaskPage> {
   bool? statusFilter;
+  final searchController = TextEditingController();
+  String searchQuery = '';
 
   final tasks = [
     (title: 'Finish UI design for dashboard', dateTime: '27/04/2026 08:00 WIB', isDone: true),
     (title: 'Conduct user testing for dashboard', dateTime: '30/04/2026 10:00 WIB', isDone: false),
     (title: 'Launch Dashboard to Beta Users', dateTime: '15/05/2026 12:00 WIB', isDone: true),
   ];
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void showTaskDetail(String title) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return TaskDetailDialog(
+          title: title,
+          description:
+              'Menyelesaikan rancangan UI/UX StudyPal Mobile version.',
+          dueDate: '5 November 2026',
+          reminder: '08:00 WIB',
+          location: 'UPN',
+          onClose: () => Navigator.pop(dialogContext),
+          onMarkDone: () {
+            debugPrint('Task marked as done');
+            Navigator.pop(dialogContext);
+          },
+          onEdit: () => debugPrint('Edit task clicked'),
+          onDelete: () => debugPrint('Delete task clicked'),
+        );
+      },
+    );
+  }
 
   void showFilterSheet() {
     showModalBottomSheet(
@@ -65,9 +98,12 @@ class _TaskPageState extends State<TaskPage> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredTasks = statusFilter == null
-        ? tasks
-        : tasks.where((t) => t.isDone == statusFilter).toList();
+    final filteredTasks = tasks.where((t) {
+      final matchStatus = statusFilter == null || t.isDone == statusFilter;
+      final matchSearch =
+          t.title.toLowerCase().contains(searchQuery.toLowerCase());
+      return matchStatus && matchSearch;
+    }).toList();
 
     return Stack(
       children: [
@@ -87,7 +123,13 @@ class _TaskPageState extends State<TaskPage> {
             Row(
               spacing: 8,
               children: [
-                const Expanded(child: AppTextField(hint: 'Search Your Task')),
+                Expanded(
+                  child: AppTextField(
+                    hint: 'Search Your Task',
+                    controller: searchController,
+                    onChanged: (value) => setState(() => searchQuery = value),
+                  ),
+                ),
                 GestureDetector(
                   onTap: showFilterSheet,
                   child: Container(
@@ -106,10 +148,13 @@ class _TaskPageState extends State<TaskPage> {
             for (final task in filteredTasks)
               Padding(
                 padding: const EdgeInsets.only(bottom: 32),
-                child: TaskCard(
-                  title: task.title,
-                  dateTime: task.dateTime,
-                  isDone: task.isDone,
+                child: GestureDetector(
+                  onTap: () => showTaskDetail(task.title),
+                  child: TaskCard(
+                    title: task.title,
+                    dateTime: task.dateTime,
+                    isDone: task.isDone,
+                  ),
                 ),
               ),
           ],
@@ -121,7 +166,7 @@ class _TaskPageState extends State<TaskPage> {
             // onTap: () {
             //   Navigator.push(
             //     context,
-            //     //MaterialPageRoute(builder: (_) => const AddTaskPage()),
+            //     MaterialPageRoute(builder: (_) => const AddTaskPage()),
             //   );
             // },
             child: Container(
