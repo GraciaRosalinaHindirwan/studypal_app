@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:studypal/components/app_button.dart';
+import 'package:studypal/pages/home_page.dart';
 import 'package:studypal/theme/app_colors.dart';
 import 'package:studypal/theme/app_text_style.dart';
 
@@ -72,7 +74,10 @@ class SummaryTaskCard extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Add Task Button
-          
+          AppButton(
+            label: "Add Task", 
+            onTap: onAddTask, 
+          ), 
         ],
       ),
     );
