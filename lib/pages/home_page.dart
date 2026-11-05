@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:studypal/components/digitalClock/digital_clock.dart';
+import 'package:studypal/components/today_plan_progress.dart';
 import 'package:studypal/theme/app_colors.dart';
 
 class HomePage extends StatelessWidget {
@@ -14,7 +15,15 @@ class HomePage extends StatelessWidget {
 
         child: Column(
           children: [
-            DigitalClock(), 
+            DigitalClock(),
+
+            const SizedBox(height: 24,), 
+
+            TodayPlanProgress(
+              message: "Great, your today's plan is almost done",
+              percentage: 75,
+            ), 
+            
           ],
         ),
       ), 
