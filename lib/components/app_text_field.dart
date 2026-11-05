@@ -6,6 +6,7 @@ class AppTextField extends StatelessWidget {
   final TextEditingController? controller;
   final bool obscureText;
   final TextInputType? keyboardType;
+  final ValueChanged<String>? onChanged;
 
   const AppTextField({
     super.key,
@@ -13,6 +14,7 @@ class AppTextField extends StatelessWidget {
     this.controller,
     this.obscureText = false,
     this.keyboardType,
+    this.onChanged,
   });
 
   @override
@@ -26,6 +28,7 @@ class AppTextField extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
+      onChanged: onChanged,
       style: const TextStyle(
         color: AppColors.primary,
         fontSize: 16,

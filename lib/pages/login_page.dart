@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:studypal/components/button.dart';
-import 'package:studypal/components/text_field.dart';
+import 'package:studypal/components/app_button.dart';
+import 'package:studypal/components/app_text_field.dart';
 import 'package:studypal/theme/app_colors.dart';
 import 'package:studypal/theme/app_text_style.dart';
 
