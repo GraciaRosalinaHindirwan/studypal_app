@@ -34,11 +34,15 @@ class _NotificationPageState extends State<NotificationPage> {
           onCustomTap: () async {
             final result = await showCustomReminderBottomSheet(context);
 
-            if (result != null) {
-              setState(() {
+            if (!mounted) return;
+
+            setState(() {
+              if (result == '__RESET__') {
+                customReminder = null;
+              } else if (result != null) {
                 customReminder = result;
-              });
-            }
+              }
+            });
           },
         ),
       ), 
