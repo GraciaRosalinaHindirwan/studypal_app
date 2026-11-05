@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:studypal/components/task_detail_dialog.dart';
+import 'package:studypal/pages/notification_page.dart';
 import 'package:studypal/theme/app_colors.dart';
 
 class TaskPage extends StatelessWidget {
@@ -45,19 +46,48 @@ class TaskPage extends StatelessWidget {
       width: double.infinity,
       color: AppColors.background,
       child: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            showTaskDetail(context);
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.accent,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 32,
-              vertical: 16,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Button Task Detail
+            ElevatedButton(
+              onPressed: () {
+                showTaskDetail(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.accent,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+              ),
+              child: const Text('Show Task Detail'),
             ),
-          ),
-          child: const Text('Show Task Detail'),
+
+            const SizedBox(height: 20),
+
+            // Button Notification Page
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationPage(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.secondary,
+                foregroundColor: AppColors.background,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+              ),
+              child: const Text('Show Notification Page'),
+            ),
+          ],
         ),
       ),
     );
