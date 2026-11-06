@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:studypal/theme/app_colors.dart';
 
 class HeaderSub extends StatelessWidget {
   final VoidCallback? onBack;
@@ -17,13 +18,14 @@ class HeaderSub extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           IconButton(
-            onPressed: onBack ?? () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context),
             icon: const Icon(
-              Icons.arrow_back_ios,
-              color: Color(0xFF043F6D),
-              size: 22,
+              Icons.arrow_back_ios_new,
+              color: AppColors.primary,
+              size: 24,
             ),
           ),
           Image.asset(
