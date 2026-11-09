@@ -5,6 +5,7 @@ import 'package:studypal/theme/app_colors.dart';
 
 import 'package:studypal/pages/home_page.dart';
 import 'package:studypal/pages/task_page.dart';
+import 'package:studypal/pages/profile_page.dart';
 
 class MainAppLayout extends StatefulWidget {
   const MainAppLayout({super.key});
@@ -18,8 +19,8 @@ class _MainAppLayoutState extends State<MainAppLayout> {
 
   final List<Widget> pages = [
     const HomePage(),
-    const TaskPage()
-  ]; 
+    const TaskPage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -29,35 +30,37 @@ class _MainAppLayoutState extends State<MainAppLayout> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsetsGeometry.symmetric(
-                horizontal: 24, 
-                vertical: 16, 
-              ), 
-
-              child: const HeaderMain(userInitial: 'R'), // test duls 
-            ), 
-
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 16,
+              ),
+              child: HeaderMain(
+                userInitial: 'R', // test duls
+                onAvatarTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfilePage()),
+                  );
+                },
+              ),
+            ),
             Expanded(
               child: IndexedStack(
-                index: selectedIndex, 
+                index: selectedIndex,
                 children: pages,
-              )
+              ),
             ),
           ],
-        ), 
+        ),
       ),
       bottomNavigationBar: ButtomNavigatorBar(
-              selectedIndex: selectedIndex, 
-              onItemSelected: (index){
-                setState(() {
-                  selectedIndex = index; 
-                });
-
-                debugPrint('Selected Index: $selectedIndex');
-  debugPrint('Pages Length: ${pages.length}');
-  debugPrint('Page Type: ${pages[selectedIndex].runtimeType}');
-              }
-            ), 
+        selectedIndex: selectedIndex,
+        onItemSelected: (index) {
+          setState(() {
+            selectedIndex = index;
+          });
+        },
+      ),
     );
   }
 }
