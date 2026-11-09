@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_text_field.dart';
+import 'package:studypal/providers/auth_provider.dart';
 import 'package:studypal/theme/app_colors.dart';
 import 'package:studypal/theme/app_text_style.dart';
 
@@ -22,6 +24,25 @@ class _RegisterPageState extends State<RegisterPage> {
     usernameController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> submit() async {
+    final error = await context.read<AuthProvider>().register(
+          email: emailController.text,
+          username: usernameController.text,
+          password: passwordController.text,
+        );
+    if (!mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+    // sukses: balik ke halaman login
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Berhasil daftar, silakan login')),
+    );
+    Navigator.pop(context);
   }
 
   @override
@@ -68,10 +89,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
-              AppTextField(
-                hint: 'Username',
-                controller: usernameController,
-              ),
+              AppTextField(hint: 'Username', controller: usernameController),
               const SizedBox(height: 16),
               AppTextField(
                 hint: 'Password',
@@ -79,11 +97,21 @@ class _RegisterPageState extends State<RegisterPage> {
                 obscureText: true,
               ),
               const SizedBox(height: 24),
-              AppButton(
-                label: 'Register',
-                onTap: () {},
+              AppButton(label: 'Register', onTap: submit),
+              const SizedBox(height: 16),
+              // tambahan di luar desain
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Sudah punya akun? Login',
+                  style: TextStyle(
+                    color: AppColors.secondary,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
             ],
           ),
         ),

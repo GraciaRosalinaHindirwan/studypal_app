@@ -1,68 +1,126 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_button_secondary.dart';
 import 'package:studypal/components/app_text_field.dart';
 import 'package:studypal/components/header_sub.dart';
-import 'package:studypal/pages/login_page.dart';
+import 'package:studypal/providers/auth_provider.dart';
 import 'package:studypal/theme/app_colors.dart';
 
 class ProfilePage extends StatefulWidget {
-  final String userInitial;
-
-  const ProfilePage({super.key, this.userInitial = 'R'});
+  const ProfilePage({super.key});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final emailController = TextEditingController();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmController = TextEditingController();
+  final emailFocus = FocusNode();
   final usernameFocus = FocusNode();
 
-  // null berarti belum ada foto, jadi yang tampil inisial
-  File? photo;
-
-  // username dikunci dulu, baru bisa diketik setelah tombol edit ditekan
+  // field dikunci dulu, baru bisa diketik setelah tombol pensil ditekan
+  bool isEditingEmail = false;
   bool isEditingUsername = false;
 
   @override
+  void initState() {
+    super.initState();
+    // isi field dengan data user yang lagi login
+    final user = context.read<AuthProvider>().currentUser!;
+    emailController.text = user.email;
+    usernameController.text = user.username;
+  }
+
+  @override
   void dispose() {
+    emailController.dispose();
     usernameController.dispose();
     passwordController.dispose();
     confirmController.dispose();
+    emailFocus.dispose();
     usernameFocus.dispose();
     super.dispose();
   }
 
   Future<void> pickPhoto() async {
-    // buka galeri, hasilnya null kalau user batal milih
+  try {
     final picked = await ImagePicker().pickImage(
       source: ImageSource.gallery,
-      imageQuality: 80,
+      imageQuality: 70,
+      maxWidth: 512, // dikecilkan biar data di Hive tetap ringan
     );
-    if (picked == null) return;
-    setState(() => photo = File(picked.path));
+    if (picked == null || !mounted) return;
+
+    final bytes = await picked.readAsBytes();
+    await context.read<AuthProvider>().updatePhoto(bytes);
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Gagal ganti foto: $e')),
+    );
+  }
+}
+
+  void enableEmailEdit() {
+    setState(() => isEditingEmail = true);
+    // fokus dipanggil setelah frame selesai, biar readOnly-nya udah kebuka
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      emailFocus.requestFocus();
+    });
   }
 
   void enableUsernameEdit() {
     setState(() => isEditingUsername = true);
-    // fokus dipanggil setelah frame selesai, biar readOnly-nya udah kebuka
     WidgetsBinding.instance.addPostFrameCallback((_) {
       usernameFocus.requestFocus();
     });
   }
 
-  void logout() {
-    // hapus semua halaman sebelumnya biar tombol back ga balik ke app
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-      (route) => false,
+  Future<void> save() async {
+    final auth = context.read<AuthProvider>();
+    final user = auth.currentUser!;
+    String? error;
+
+    // email & username cuma diupdate kalau memang berubah
+    if (emailController.text.trim() != user.email) {
+      error = await auth.updateEmail(emailController.text);
+    }
+    if (error == null && usernameController.text.trim() != user.username) {
+      error = await auth.updateUsername(usernameController.text);
+    }
+    // password cuma diupdate kalau diisi
+    if (error == null && passwordController.text.isNotEmpty) {
+      error = await auth.updatePassword(
+        passwordController.text,
+        confirmController.text,
+      );
+    }
+    if (!mounted) return;
+    if (error == null) {
+      passwordController.clear();
+      confirmController.clear();
+      setState(() {
+        isEditingEmail = false;
+        isEditingUsername = false;
+      });
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error ?? 'Profil berhasil disimpan')),
     );
+  }
+
+  Future<void> logout() async {
+    // tutup semua halaman yang kebuka dulu, baru logout.
+    // setelah itu main.dart otomatis nampilin LoginPage
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    await context.read<AuthProvider>().logout();
   }
 
   Widget sectionLabel(String text) {
@@ -80,8 +138,55 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  // field + tombol pensil, tinggi pensil ngikutin tinggi field
+  Widget editableField({
+    required String hint,
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    required bool isEditing,
+    required VoidCallback onEdit,
+    TextInputType? keyboardType,
+  }) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 8,
+        children: [
+          Expanded(
+            child: AppTextField(
+              hint: hint,
+              controller: controller,
+              focusNode: focusNode,
+              readOnly: !isEditing,
+              keyboardType: keyboardType,
+            ),
+          ),
+          GestureDetector(
+            onTap: onEdit,
+            child: Container(
+              width: 56,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.secondary, width: 3),
+              ),
+              child: const Icon(
+                Icons.edit_outlined,
+                size: 20,
+                color: AppColors.secondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // watch: foto & inisial ikut berubah pas data user berubah
+    final user = context.watch<AuthProvider>().currentUser!;
+      final hasPhoto = user.photoBytes != null;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -90,7 +195,6 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             spacing: 16,
             children: [
-              // header sub (tombol back + logo), tanpa layout
               const HeaderSub(),
               SizedBox(
                 width: 150,
@@ -105,25 +209,25 @@ class _ProfilePageState extends State<ProfilePage> {
                         color: AppColors.accent,
                         shape: BoxShape.circle,
                         border: Border.all(color: AppColors.primary, width: 2),
-                        image: photo == null
-                            ? null
-                            : DecorationImage(
-                                image: FileImage(photo!),
-                                fit: BoxFit.cover,
-                              ),
+                        image: hasPhoto
+                          ? DecorationImage(
+                              image: MemoryImage(user.photoBytes!),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
                       ),
                       // inisial cuma muncul kalau belum ada foto
-                      child: photo == null
-                          ? Text(
-                              widget.userInitial,
+                      child: hasPhoto
+                          ? null
+                          : Text(
+                              user.username[0].toUpperCase(),
                               style: const TextStyle(
                                 color: AppColors.primary,
                                 fontSize: 48,
                                 fontFamily: 'Poppins',
                                 fontWeight: FontWeight.w700,
                               ),
-                            )
-                          : null,
+                            ),
                     ),
                     Positioned(
                       right: 0,
@@ -150,35 +254,20 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(height: 8),
               sectionLabel('Profile'),
-              Row(
-                spacing: 8,
-                children: [
-                  Expanded(
-                    child: AppTextField(
-                      hint: 'Username',
-                      controller: usernameController,
-                      focusNode: usernameFocus,
-                      readOnly: !isEditingUsername,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: enableUsernameEdit,
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border:
-                            Border.all(color: AppColors.secondary, width: 3),
-                      ),
-                      child: const Icon(
-                        Icons.edit_outlined,
-                        size: 20,
-                        color: AppColors.secondary,
-                      ),
-                    ),
-                  ),
-                ],
+              editableField(
+                hint: 'Email',
+                controller: emailController,
+                focusNode: emailFocus,
+                isEditing: isEditingEmail,
+                onEdit: enableEmailEdit,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              editableField(
+                hint: 'Username',
+                controller: usernameController,
+                focusNode: usernameFocus,
+                isEditing: isEditingUsername,
+                onEdit: enableUsernameEdit,
               ),
               sectionLabel('Edit Password'),
               AppTextField(
@@ -192,15 +281,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 obscureText: true,
               ),
               const SizedBox(height: 8),
-              AppButton(
-                label: 'Save',
-                // TODO: isi logic simpan nanti setelah backend siap
-                onTap: () {},
-              ),
-              AppButtonSecondary(
-                label: 'Logout',
-                onTap: logout,
-              ),
+              AppButton(label: 'Save', onTap: save),
+              AppButtonSecondary(label: 'Logout', onTap: logout),
               const SizedBox(height: 24),
             ],
           ),
