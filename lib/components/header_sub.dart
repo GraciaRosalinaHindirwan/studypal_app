@@ -2,12 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:studypal/theme/app_colors.dart';
 
 class HeaderSub extends StatelessWidget {
-  const HeaderSub({super.key});
+  final VoidCallback? onBack;
+
+  const HeaderSub({
+    super.key,
+    this.onBack,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 24),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 12,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -22,8 +30,8 @@ class HeaderSub extends StatelessWidget {
           ),
           Image.asset(
             'assets/img/LogoHeader.png',
-            width: 165,
-            height: 50,
+            width: 110,
+            height: 38,
             fit: BoxFit.contain,
           ),
         ],

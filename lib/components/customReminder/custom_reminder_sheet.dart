@@ -69,22 +69,47 @@ class _CustomReminderSheetState
                 top: Radius.circular(32),
               ),
             ),
-            child: Column(
+            child: Stack(
+              alignment: Alignment.center,
               children: [
-                Text(
-                  'Waktu Pengingat',
-                  style: AppTextStyles.heading.copyWith(
-                    fontSize: 20,
-                    color: AppColors.background,
-                  ),
+                Column(
+                  children: [
+                    Text(
+                      'Waktu Pengingat',
+                      style: AppTextStyles.title.copyWith(
+                        fontSize: 21,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.background,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    Text(
+                      '$selectedValue $selectedUnit sebelum',
+                      style: AppTextStyles.title.copyWith(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.accent,
+                      ),
+                    ),
+                  ],
                 ),
 
-                const SizedBox(height: 8),
-
-                Text(
-                  '$selectedValue $selectedUnit sebelum',
-                  style: AppTextStyles.title.copyWith(
-                    color: AppColors.accent,
+                // Reset Button
+                Positioned(
+                  right: 12,
+                  top: 0,
+                  child: IconButton(
+                    onPressed: () {
+                      Navigator.pop(context, '__RESET__');
+                    },
+                    icon: const Icon(
+                      Icons.refresh,
+                      color: AppColors.accent,
+                      size: 24,
+                    ),
+                    tooltip: 'Reset pengingat',
                   ),
                 ),
               ],
