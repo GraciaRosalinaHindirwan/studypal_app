@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:studypal/models/task.dart';
+import 'package:studypal/services/task_service.dart';
+
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_button_secondary.dart';
 import 'package:studypal/components/app_text_field.dart';
@@ -45,6 +49,57 @@ class _AddTaskPageState extends State<AddTaskPage> {
   String formatDueDate(DateTime d) {
     String two(int n) => n.toString().padLeft(2, '0');
     return '${two(d.day)}/${two(d.month)} ${two(d.hour)}:${two(d.minute)}';
+  }
+
+  Future<void> addTask() async{
+    //ambil nilai input
+    final title = titleController.text.trim(); 
+    final description = descriptionController.text.trim(); 
+
+    //validasi title 
+    if(title.isEmpty){
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Title tidak boleh kosong"))
+      );
+      return; 
+    }
+
+    //buat object task 
+    final task = Task(
+      id: DateTime.now().microsecondsSinceEpoch.toString(), 
+      title: title, 
+      description: description, 
+      dueDate: dueDate,
+      reminderMinutes: [],
+      notificationIds: {},
+      createdAt: DateTime.now(),
+    ); 
+
+    try {
+      //menghubungkan dengan Hive
+      final taskBox = Hive.box<Task>('tasks'); 
+      final taskService = TaskService(taskBox); 
+
+      //simpan task 
+      await taskService.addTask(task); 
+
+      if (!mounted) return; 
+
+      //menampilkan pesan berhasil 
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Task berhasil ditambahkan!"))
+      );
+      
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal menambahkan task: $e'),
+        ),
+      );
+      
+    }
   }
 
   @override
@@ -110,7 +165,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   ),
                 ),
                 Expanded(
-                  child: AppButton(label: 'Add Task', onTap: () {}),
+                  child: AppButton(label: 'Add Task', onTap: addTask),
                 ),
               ],
             ),
