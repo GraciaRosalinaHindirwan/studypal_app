@@ -89,6 +89,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Task berhasil ditambahkan!"))
       );
+
+      Navigator.pop(context, true);
       
     } catch (e) {
       if (!mounted) return;
