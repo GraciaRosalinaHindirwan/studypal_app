@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:studypal/models/task.dart';
+import 'package:studypal/pages/pick_location_page.dart';
 import 'package:studypal/services/task_service.dart';
 
 import 'package:studypal/components/app_button.dart';
@@ -172,8 +173,13 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
                 OptionChip(
                   label: 'Location',
                   icon: Icons.location_on_outlined,
-                  onTap: () {
-                    // TODO: arahkan ke location picker
+                   onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PickLocationPage(),
+                      ),
+                    );
                   },
                 ),
               ],
