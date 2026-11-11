@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_text_field.dart';
-import 'package:studypal/providers/auth_provider.dart';
+import 'package:studypal/services/user_service.dart';
 import 'package:studypal/theme/app_colors.dart';
 import 'package:studypal/theme/app_text_style.dart';
 
@@ -26,22 +25,23 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  Future<void> submit() async {
-    final error = await context.read<AuthProvider>().register(
-          email: emailController.text,
-          username: usernameController.text,
-          password: passwordController.text,
-        );
+  Future<void> _register() async {
+    final error = await UserService.register(
+      email: emailController.text,
+      username: usernameController.text,
+      password: passwordController.text,
+    );
     if (!mounted) return;
+
     if (error != null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(error)));
       return;
     }
-    // sukses: balik ke halaman login
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Berhasil daftar, silakan login')),
     );
+    // sukses: balik ke halaman login
     Navigator.pop(context);
   }
 
@@ -97,9 +97,8 @@ class _RegisterPageState extends State<RegisterPage> {
                 obscureText: true,
               ),
               const SizedBox(height: 24),
-              AppButton(label: 'Register', onTap: submit),
+              AppButton(label: 'Register', onTap: _register),
               const SizedBox(height: 16),
-              // tambahan di luar desain
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text(
