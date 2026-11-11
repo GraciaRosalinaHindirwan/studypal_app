@@ -196,11 +196,13 @@ class _TaskPageState extends State<TaskPage> {
               : task.reminderMinutes.toString(),
           location: task.locationName ?? 'No location',
 
+          isCompleted: task.isCompleted,
+
           onClose: () => Navigator.pop(dialogContext),
 
-          onMarkDone: () {
+          onToggleStatus: () {
             Navigator.pop(dialogContext);
-            markTaskAsDone(task);
+            toggleTaskStatus(task);
           },
 
           onEdit: () {
@@ -319,6 +321,48 @@ class _TaskPageState extends State<TaskPage> {
         SnackBar(
           content: Text('Gagal memperbarui status task: $e'),
         ),
+      );
+    }
+  }
+
+  Future<void> toggleTaskStatus(Task task) async {
+    try {
+      final updatedTask = Task(
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        isCompleted: !task.isCompleted,
+        locationName: task.locationName,
+        locationAddress: task.locationAddress,
+        latitude: task.latitude,
+        longitude: task.longitude,
+        dueDate: task.dueDate,
+        reminderMinutes: task.reminderMinutes,
+        notificationIds: task.notificationIds,
+        createdAt: task.createdAt,
+      );
+
+      final taskBox = Hive.box<Task>('tasks');
+      final taskService = TaskService(taskBox);
+
+      await taskService.updateTask(updatedTask);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            updatedTask.isCompleted
+                ? 'Task berhasil diselesaikan!'
+                : 'Status task dikembalikan ke To Do!',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengubah status task: $e')),
       );
     }
   }

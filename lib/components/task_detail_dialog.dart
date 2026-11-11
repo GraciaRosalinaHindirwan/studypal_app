@@ -9,11 +9,12 @@ class TaskDetailDialog extends StatelessWidget {
   final String dueDate;
   final String reminder;
   final String location;
+  final bool isCompleted;
 
   final VoidCallback onClose;
-  final VoidCallback onMarkDone;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onToggleStatus;
 
   const TaskDetailDialog({
     super.key,
@@ -23,9 +24,10 @@ class TaskDetailDialog extends StatelessWidget {
     required this.reminder,
     required this.location,
     required this.onClose,
-    required this.onMarkDone,
     required this.onEdit,
     required this.onDelete,
+    required this.isCompleted,
+    required this.onToggleStatus,
   });
 
   @override
@@ -142,8 +144,8 @@ class TaskDetailDialog extends StatelessWidget {
                     
                               // Mark as Done
                               AppButton(
-                                label: "Mark as Done", 
-                                onTap: onMarkDone, 
+                                label: isCompleted ? 'Undo Completed' : 'Mark as Done',
+                                onTap: onToggleStatus,
                               ), 
                             ],
                           ),
