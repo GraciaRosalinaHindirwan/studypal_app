@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:studypal/models/task.dart';
+import 'package:studypal/pages/add_task_page.dart';
 import 'package:studypal/pages/pick_location_page.dart';
+import 'package:studypal/pages/task_page.dart';
 
 Future<void> main() async {
   // memastikan flutter siap 
@@ -26,6 +28,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      home: TaskPage(),
     );
   }
 }
