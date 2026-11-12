@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/header_sub.dart';
 import 'package:studypal/components/search_bar.dart' as search;
@@ -16,6 +19,8 @@ class PickLocationPage extends StatefulWidget {
 class _PickLocationPageState extends State<PickLocationPage> {
   final TextEditingController searchController = TextEditingController();
   final LocationService locationService = LocationService();
+  final MapController mapController = MapController();
+  LatLng selectedPoint = LatLng(-7.7956, 110.3695);
 
   List<Location> locations = [];
   bool isLoading = false;
@@ -68,8 +73,28 @@ class _PickLocationPageState extends State<PickLocationPage> {
     }
   }
 
+  void selectLocation(Location location) {
+    //membuat koordinat 
+    final point = LatLng(
+      location.latitude,
+      location.longitude,
+    );
+
+    //memindahkan peta 
+    mapController.move(point, 17);
+
+    setState(() {
+      selectedLocation = location;
+      selectedPoint = point;
+      locations = [];
+    });
+
+    FocusScope.of(context).unfocus();
+  }
+  
   @override
   Widget build(BuildContext context) {
+    debugPrint('PickLocationPage sedang build');
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -86,15 +111,58 @@ class _PickLocationPageState extends State<PickLocationPage> {
                 children: [
                   // Map Placeholder
                   Positioned.fill(
-                    child: Container(
-                      color: AppColors.background,
-                      child: const Center(
-                        child: Text(
-                          'Map will be displayed here',
-                          style: TextStyle(
-                            color: AppColors.secondary,
-                            fontSize: 14,
-                            fontFamily: 'Poppins',
+                    child: FlutterMap(
+                      mapController: mapController,
+                      options: MapOptions(
+                        initialCenter: LatLng(-7.7956, 110.3695),
+                        initialZoom: 15,
+                         onMapReady: () {
+                          debugPrint('Map sudah siap');
+                        },
+                        onPositionChanged: (camera, hasGesture) {
+                          if (hasGesture) {
+                            setState(() {
+                              selectedPoint = camera.center;
+                              selectedLocation = null;
+                            });
+
+                            debugPrint(
+                              'Latitude: ${selectedPoint.latitude}, '
+                              'Longitude: ${selectedPoint.longitude}',
+                            );
+                          }
+                        },
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'studypal',
+
+                          errorTileCallback: (tile, error, stackTrace) {
+                            debugPrint('Gagal memuat tile: $error');
+                          },
+                        ),
+                        RichAttributionWidget(
+                          attributions: [
+                            TextSourceAttribution(
+                              'OpenStreetMap contributors',
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Fixed Center Marker
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Center(
+                        child: Transform.translate(
+                          offset: const Offset(0, -24),
+                          child: const Icon(
+                            Icons.location_pin,
+                            color: Colors.red,
+                            size: 48,
                           ),
                         ),
                       ),
@@ -153,7 +221,7 @@ class _PickLocationPageState extends State<PickLocationPage> {
                                         ),
                                         onTap: () {
                                           setState(() {
-                                            selectedLocation = location;
+                                             selectLocation(location);
                                           });
                                         },
                                       );
@@ -170,7 +238,8 @@ class _PickLocationPageState extends State<PickLocationPage> {
                     child: AppButton(
                       label: 'Picked This Location',
                       onTap: () {
-                        debugPrint('Location picked');
+                      debugPrint('Selected Latitude: ${selectedPoint.latitude}');
+                      debugPrint('Selected Longitude: ${selectedPoint.longitude}');
                       },
                     ),
                   ),

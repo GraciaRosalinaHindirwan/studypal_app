@@ -10,7 +10,6 @@ import 'package:studypal/components/app_text_field.dart';
 import 'package:studypal/components/due_date_dialog.dart';
 import 'package:studypal/components/option_chip.dart';
 import 'package:studypal/layouts/sub_page_layout.dart';
-import 'package:studypal/models/task.dart';
 import 'package:studypal/pages/notification_page.dart';
 import 'package:studypal/theme/app_colors.dart';
 import 'package:studypal/theme/app_text_style.dart';
