@@ -28,6 +28,8 @@ class OptionChip extends StatelessWidget {
           children: [
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: AppColors.secondary,
                 fontSize: 12,

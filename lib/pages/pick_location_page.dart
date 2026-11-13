@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -10,23 +11,55 @@ import 'package:studypal/services/location_service.dart';
 import 'package:studypal/models/location.dart';
 
 class PickLocationPage extends StatefulWidget {
-  const PickLocationPage({super.key});
+  final Location? initialLocation;
+
+  const PickLocationPage({
+    super.key,
+    this.initialLocation,
+  });
 
   @override
   State<PickLocationPage> createState() => _PickLocationPageState();
 }
 
 class _PickLocationPageState extends State<PickLocationPage> {
+  // Controller dan service
   final TextEditingController searchController = TextEditingController();
   final LocationService locationService = LocationService();
   final MapController mapController = MapController();
-  LatLng selectedPoint = LatLng(-7.7956, 110.3695);
 
+  // Menentukan koordinat awal peta
+  LatLng get initialPoint {
+    if (widget.initialLocation != null) {
+      return LatLng(
+        widget.initialLocation!.latitude,
+        widget.initialLocation!.longitude,
+      );
+    }
+
+    return LatLng(-7.7956, 110.3695);
+  }
+
+  // Menyimpan koordinat marker saat ini
+  late LatLng selectedPoint = initialPoint;
+
+  // Data hasil pencarian
   List<Location> locations = [];
+
+  // Status pencarian
   bool isLoading = false;
   String? errorMessage;
 
+  // Lokasi yang dipilih
   Location? selectedLocation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Mempertahankan lokasi yang sebelumnya dipilih
+    selectedLocation = widget.initialLocation;
+  }
 
   @override
   void dispose() {
@@ -34,6 +67,7 @@ class _PickLocationPageState extends State<PickLocationPage> {
     super.dispose();
   }
 
+  // Fungsi mencari lokasi
   Future<void> searchLocation() async {
     final query = searchController.text.trim();
 
@@ -73,14 +107,14 @@ class _PickLocationPageState extends State<PickLocationPage> {
     }
   }
 
+  // Fungsi memilih hasil pencarian
   void selectLocation(Location location) {
-    //membuat koordinat 
     final point = LatLng(
       location.latitude,
       location.longitude,
     );
 
-    //memindahkan peta 
+    // Memindahkan peta ke lokasi yang dipilih
     mapController.move(point, 17);
 
     setState(() {
@@ -91,10 +125,25 @@ class _PickLocationPageState extends State<PickLocationPage> {
 
     FocusScope.of(context).unfocus();
   }
-  
+
+  // Fungsi konfirmasi lokasi
+  void confirmLocation() {
+    final location = selectedLocation ??
+        Location(
+          name: 'Lokasi pilihan di peta',
+          address:
+              'Latitude: ${selectedPoint.latitude}, '
+              'Longitude: ${selectedPoint.longitude}',
+          latitude: selectedPoint.latitude,
+          longitude: selectedPoint.longitude,
+        );
+
+    // Mengirim lokasi kembali ke AddTaskPage
+    Navigator.pop(context, location);
+  }
+
   @override
   Widget build(BuildContext context) {
-    debugPrint('PickLocationPage sedang build');
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -109,16 +158,18 @@ class _PickLocationPageState extends State<PickLocationPage> {
             Expanded(
               child: Stack(
                 children: [
-                  // Map Placeholder
+                  // OpenStreetMap
                   Positioned.fill(
                     child: FlutterMap(
                       mapController: mapController,
                       options: MapOptions(
-                        initialCenter: LatLng(-7.7956, 110.3695),
-                        initialZoom: 15,
-                         onMapReady: () {
+                        initialCenter: initialPoint,
+                        initialZoom: widget.initialLocation != null ? 17 : 15,
+
+                        onMapReady: () {
                           debugPrint('Map sudah siap');
                         },
+
                         onPositionChanged: (camera, hasGesture) {
                           if (hasGesture) {
                             setState(() {
@@ -135,13 +186,14 @@ class _PickLocationPageState extends State<PickLocationPage> {
                       ),
                       children: [
                         TileLayer(
-                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                           userAgentPackageName: 'studypal',
-
                           errorTileCallback: (tile, error, stackTrace) {
                             debugPrint('Gagal memuat tile: $error');
                           },
                         ),
+
                         RichAttributionWidget(
                           attributions: [
                             TextSourceAttribution(
@@ -153,7 +205,7 @@ class _PickLocationPageState extends State<PickLocationPage> {
                     ),
                   ),
 
-                  // Fixed Center Marker
+                  // Marker tetap di tengah peta
                   Positioned.fill(
                     child: IgnorePointer(
                       child: Center(
@@ -181,66 +233,64 @@ class _PickLocationPageState extends State<PickLocationPage> {
                       onChanged: (value) {},
                       onSearchTap: searchLocation,
                     ),
-                  ), 
+                  ),
 
-                Positioned(
-                  top: 88,
-                  left: 24,
-                  right: 24,
-                  child: isLoading
-                      ? const Center(
-                          child: CircularProgressIndicator(),
-                        )
-                      : errorMessage != null
-                          ? Text(
-                              errorMessage!,
-                              style: const TextStyle(color: Colors.red),
-                            )
-                          : locations.isEmpty
-                              ? const SizedBox.shrink()
-                              : Container(
-                                  constraints: const BoxConstraints(
-                                    maxHeight: 250,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: ListView.builder(
-                                    shrinkWrap: true,
-                                    itemCount: locations.length,
-                                    itemBuilder: (context, index) {
-                                      final location = locations[index];
-
-                                      return ListTile(
-                                        title: Text(location.name),
-                                        subtitle: Text(
-                                          location.address,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        onTap: () {
-                                          setState(() {
-                                             selectLocation(location);
-                                          });
-                                        },
-                                      );
-                                    },
-                                  ),
+                  // Search Results
+                  Positioned(
+                    top: 88,
+                    left: 24,
+                    right: 24,
+                    child: isLoading
+                        ? const Center(
+                            child: CircularProgressIndicator(),
+                          )
+                        : errorMessage != null
+                            ? Text(
+                                errorMessage!,
+                                style: const TextStyle(
+                                  color: Colors.red,
                                 ),
-                ),
+                              )
+                            : locations.isEmpty
+                                ? const SizedBox.shrink()
+                                : Container(
+                                    constraints: const BoxConstraints(
+                                      maxHeight: 250,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: locations.length,
+                                      itemBuilder: (context, index) {
+                                        final location = locations[index];
+
+                                        return ListTile(
+                                          title: Text(location.name),
+                                          subtitle: Text(
+                                            location.address,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          onTap: () {
+                                            selectLocation(location);
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ),
+                  ),
 
                   // Pick Location Button
-                 Positioned(
+                  Positioned(
                     left: 24,
                     right: 24,
                     bottom: 24,
                     child: AppButton(
                       label: 'Picked This Location',
-                      onTap: () {
-                      debugPrint('Selected Latitude: ${selectedPoint.latitude}');
-                      debugPrint('Selected Longitude: ${selectedPoint.longitude}');
-                      },
+                      onTap: confirmLocation,
                     ),
                   ),
                 ],

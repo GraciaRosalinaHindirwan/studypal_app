@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:studypal/models/task.dart';
 import 'package:studypal/services/task_service.dart';
 
 import 'package:studypal/components/app_button.dart';
@@ -9,6 +8,9 @@ import 'package:studypal/components/app_text_field.dart';
 import 'package:studypal/components/due_date_dialog.dart';
 import 'package:studypal/components/option_chip.dart';
 import 'package:studypal/layouts/sub_page_layout.dart';
+
+import 'package:studypal/models/task.dart';
+import 'package:studypal/models/location.dart';
 
 import 'package:studypal/pages/notification_page.dart';
 import 'package:studypal/pages/pick_location_page.dart';
@@ -26,10 +28,10 @@ class AddTaskPage extends StatefulWidget {
 class _AddTaskPageState extends State<AddTaskPage> {
   final titleController = TextEditingController();
   final descriptionController = TextEditingController();
+  Location? selectedLocation; 
 
   // null berarti user belum milih due date
   DateTime? dueDate;
-
   @override
   void dispose() {
     titleController.dispose();
@@ -54,6 +56,23 @@ class _AddTaskPageState extends State<AddTaskPage> {
     return '${two(d.day)}/${two(d.month)} ${two(d.hour)}:${two(d.minute)}';
   }
 
+  Future<void> pickLocation() async {
+    final result = await Navigator.push<Location>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => PickLocationPage(
+        initialLocation: selectedLocation,
+      ),
+    ),
+  );
+
+    if (!mounted || result == null) return;
+
+    setState(() {
+      selectedLocation = result;
+    });
+  }
+
   Future<void> addTask() async{
     //ambil nilai input
     final title = titleController.text.trim(); 
@@ -76,6 +95,12 @@ class _AddTaskPageState extends State<AddTaskPage> {
       reminderMinutes: [],
       notificationIds: {},
       createdAt: DateTime.now(),
+
+      // Data lokasi
+      locationName: selectedLocation?.name,
+      locationAddress: selectedLocation?.address,
+      latitude: selectedLocation?.latitude,
+      longitude: selectedLocation?.longitude,
     ); 
 
     try {
@@ -152,16 +177,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   },
                 ),
                 OptionChip(
-                  label: 'Location',
+                  label: selectedLocation?.name ?? 'Location',
                   icon: Icons.location_on_outlined,
-                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PickLocationPage(),
-                      ),
-                    );
-                  },
+                  onTap: pickLocation,
                 ),
               ],
             ),
