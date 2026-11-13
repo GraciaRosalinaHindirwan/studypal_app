@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:studypal/models/task.dart';
+import 'package:studypal/models/location.dart';
 import 'package:studypal/pages/pick_location_page.dart';
 import 'package:studypal/services/task_service.dart';
 
@@ -16,13 +17,18 @@ import 'package:studypal/theme/app_text_style.dart';
 
 class UpdateTaskPage extends StatefulWidget {
   final Task task;
-  const UpdateTaskPage({super.key, required this.task});
+
+  const UpdateTaskPage({
+    super.key, 
+    required this.task, 
+  });
 
   @override
   State<UpdateTaskPage> createState() => _UpdateTaskPageState();
 }
 
 class _UpdateTaskPageState extends State<UpdateTaskPage> {
+  Location? selectedLocation;
   @override
   void initState() {
     super.initState();
@@ -30,6 +36,16 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
     titleController.text = widget.task.title;
     descriptionController.text = widget.task.description;
     dueDate = widget.task.dueDate;
+
+    if (widget.task.latitude != null &&
+        widget.task.longitude != null) {
+      selectedLocation = Location(
+        name: widget.task.locationName ?? 'Lokasi pilihan di peta',
+        address: widget.task.locationAddress ?? '',
+        latitude: widget.task.latitude!,
+        longitude: widget.task.longitude!,
+      );
+    }
   }
 
   final titleController = TextEditingController();
@@ -84,10 +100,10 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
       description: description,
       isCompleted: widget.task.isCompleted,
       dueDate: dueDate,
-      locationName: widget.task.locationName,
-      locationAddress: widget.task.locationAddress,
-      latitude: widget.task.latitude,
-      longitude: widget.task.longitude,
+      locationName: selectedLocation?.name,
+      locationAddress: selectedLocation?.address,
+      latitude: selectedLocation?.latitude,
+      longitude: selectedLocation?.longitude,
       reminderMinutes: widget.task.reminderMinutes,
       notificationIds: widget.task.notificationIds,
       createdAt: widget.task.createdAt,
@@ -123,6 +139,23 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
         ),
       );
     }
+  }
+
+  Future<void> pickLocation() async {
+    final result = await Navigator.push<Location>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PickLocationPage(
+          initialLocation: selectedLocation,
+        ),
+      ),
+    );
+
+    if (!mounted || result == null) return;
+
+    setState(() {
+      selectedLocation = result;
+    });
   }
 
   @override
@@ -170,16 +203,10 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
                   },
                 ),
                 OptionChip(
-                  label: 'Location',
+                  label: selectedLocation?.name ?? 'Location',
                   icon: Icons.location_on_outlined,
-                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PickLocationPage(),
-                      ),
-                    );
-                  },
+                  onTap: pickLocation,
+                  
                 ),
               ],
             ),
