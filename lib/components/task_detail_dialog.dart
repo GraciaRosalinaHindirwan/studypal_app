@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/theme/app_colors.dart';
 import 'package:studypal/theme/app_text_style.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:studypal/services/location_service.dart';
 
-class TaskDetailDialog extends StatelessWidget {
+class TaskDetailDialog extends StatefulWidget {
   final String title;
   final String description;
   final String dueDate;
   final String reminder;
   final String location;
+  final double? locationLatitude;
+  final double? locationLongitude;
   final bool isCompleted;
 
   final VoidCallback onClose;
@@ -23,12 +28,203 @@ class TaskDetailDialog extends StatelessWidget {
     required this.dueDate,
     required this.reminder,
     required this.location,
+    this.locationLatitude,
+    this.locationLongitude,
     required this.onClose,
     required this.onEdit,
     required this.onDelete,
     required this.isCompleted,
     required this.onToggleStatus,
   });
+
+ 
+
+  @override
+  State<TaskDetailDialog> createState() => _TaskDetailDialogState();
+}
+
+class _TaskDetailDialogState extends State<TaskDetailDialog> {
+  final LocationService _locationService = LocationService();
+  final MapController _mapController = MapController();
+
+  LatLng? _userPosition;
+  String _distanceText = 'Memuat jarak...';
+  
+
+  bool _isMapReady = false;
+
+  List<LatLng> _routePoints = [];
+
+  Widget _buildDistanceMapSection(LatLng target) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 175,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppColors.primary,
+              width: 2,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: target,
+              initialZoom: 15,
+              onMapReady: () {
+                setState(() {
+                  _isMapReady = true;
+                });
+                _fitCameraIfPossible();
+              },
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+              ),
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'studypal',
+              ),
+              if (_routePoints.isNotEmpty)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: _routePoints,
+                      strokeWidth: 3.5,
+                      color: AppColors.primary,
+                    ),
+                  ],
+                ),
+
+              MarkerLayer(
+                markers: [
+                  if (_userPosition != null)
+                    Marker(
+                      point: _userPosition!,
+                      width: 36,
+                      height: 36,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2.5),
+                        ),
+                        child: const Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  Marker(
+                    point: target,
+                    width: 40,
+                    height: 40,
+                    child: const Icon(
+                      Icons.location_pin,
+                      color: Colors.red,
+                      size: 38,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        _buildInfoItem(
+          icon: Icons.near_me_outlined,
+          label: 'Distance',
+          value: _distanceText,
+        ),
+      ],
+    );
+  }
+
+   void _fitCameraIfPossible() {
+    final target = _targetPosition;
+    final userPos = _userPosition;
+    if (!_isMapReady || target == null || userPos == null || !mounted) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isMapReady || !mounted) return;
+      _mapController.fitCamera(
+        CameraFit.coordinates(
+          coordinates: [userPos, target],
+          padding: const EdgeInsets.all(28),
+        ),
+      );
+    });
+  }
+
+  //getter buat ubah latitude sama longitude jadi latLng 
+  LatLng? get _targetPosition {
+    if (widget.locationLatitude == null || widget.locationLongitude == null) {
+      return null;
+    }
+    return LatLng(widget.locationLatitude!, widget.locationLongitude!);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocationAndDistance();
+  }
+
+  Future<void> _loadLocationAndDistance() async {
+    final target = _targetPosition;
+    if (target == null) {
+      if (!mounted) return;
+      setState(() {
+        _distanceText = 'Lokasi belum diatur';
+      });
+      return;
+    }
+
+    final userPos = await _locationService.getCurrentUserPosition();
+
+
+    if (!mounted) return;
+
+    if (userPos == null) {
+      
+      setState(() {
+        _distanceText = 'Jarak tidak tersedia (cek GPS/izin lokasi)';
+      });
+      return;
+    }
+
+    final routeResult = await _locationService.getDrivingRoute(
+      start: userPos,
+      end: target,
+    );
+
+    final points = (routeResult != null && routeResult.points.isNotEmpty)
+    ? routeResult.points
+    : [userPos, target];
+
+final meters = routeResult?.distanceMeters ??
+    _locationService.calculateDistanceMeters(
+      startLat: userPos.latitude,
+      startLng: userPos.longitude,
+      endLat: target.latitude,
+      endLng: target.longitude,
+    );
+
+    setState(() {
+      _userPosition = userPos;
+      _routePoints = points;
+      _distanceText = '${_locationService.formatDistance(meters)} dari lokasimu';
+    });
+
+    //supaya 2 titik keliat jelas 
+    _fitCameraIfPossible();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +246,7 @@ class TaskDetailDialog extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: _buildCircleButton(
                   icon: Icons.close,
-                  onTap: onClose,
+                  onTap: widget.onClose,
                 ),
               ),
 
@@ -92,7 +288,7 @@ class TaskDetailDialog extends StatelessWidget {
                                 CrossAxisAlignment.start,
                             children: [
                               Text(
-                                title,
+                                widget.title,
                                 style: AppTextStyles.title.copyWith(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -103,7 +299,7 @@ class TaskDetailDialog extends StatelessWidget {
                               const SizedBox(height: 8),
                     
                               Text(
-                                description,
+                                widget.description,
                                 style: AppTextStyles.body.copyWith(
                                   fontSize: 13,
                                   color: AppColors.accent,
@@ -121,7 +317,7 @@ class TaskDetailDialog extends StatelessWidget {
                               _buildInfoItem(
                                 icon: Icons.edit_calendar,
                                 label: 'Due Date',
-                                value: dueDate,
+                                value: widget.dueDate,
                               ),
                     
                               const SizedBox(height: 14),
@@ -129,7 +325,7 @@ class TaskDetailDialog extends StatelessWidget {
                               _buildInfoItem(
                                 icon: Icons.alarm,
                                 label: 'Reminder',
-                                value: reminder,
+                                value: widget.reminder,
                               ),
                     
                               const SizedBox(height: 14),
@@ -137,15 +333,20 @@ class TaskDetailDialog extends StatelessWidget {
                               _buildInfoItem(
                                 icon: Icons.location_on_outlined,
                                 label: 'Location',
-                                value: location,
+                                value: widget.location,
                               ),
+
+                              if (_targetPosition != null) ...[
+                                const SizedBox(height: 14),
+                                _buildDistanceMapSection(_targetPosition!),
+                              ],
                     
                               const SizedBox(height: 16),
                     
                               // Mark as Done
                               AppButton(
-                                label: isCompleted ? 'Undo Completed' : 'Mark as Done',
-                                onTap: onToggleStatus,
+                                label: widget.isCompleted ? 'Undo Completed' : 'Mark as Done',
+                                onTap: widget.onToggleStatus,
                               ), 
                             ],
                           ),
@@ -164,14 +365,14 @@ class TaskDetailDialog extends StatelessWidget {
                 children: [
                   _buildCircleButton(
                     icon: Icons.edit_outlined,
-                    onTap: onEdit,
+                    onTap: widget.onEdit,
                   ),
 
                   const SizedBox(width: 32),
 
                   _buildCircleButton(
                     icon: Icons.delete_outline,
-                    onTap: onDelete,
+                    onTap: widget.onDelete,
                   ),
                 ],
               ),

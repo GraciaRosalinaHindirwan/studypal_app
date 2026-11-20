@@ -195,6 +195,8 @@ class _TaskPageState extends State<TaskPage> {
               ? 'No reminder'
               : task.reminderMinutes.toString(),
           location: task.locationName ?? 'No location',
+          locationLatitude: task.latitude,
+          locationLongitude: task.longitude,
 
           isCompleted: task.isCompleted,
 

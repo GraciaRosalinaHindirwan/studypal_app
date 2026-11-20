@@ -4,6 +4,16 @@ import 'package:studypal/models/location.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
+class RouteResult {
+  final List<LatLng> points;
+  final double distanceMeters;
+
+  RouteResult({
+    required this.points,
+    required this.distanceMeters,
+  });
+}
+
 class LocationService {
   Future<List<Location>> searchLocations( //mengembalikan kumpulan objek Location.
     String query,
@@ -62,6 +72,61 @@ class LocationService {
     }
   }
 
+  Future<RouteResult?> getDrivingRoute({
+    required LatLng start,
+    required LatLng end,
+  }) async {
+    final uri = Uri.parse(
+      'https://router.project-osrm.org/route/v1/driving/'
+      '${start.longitude},${start.latitude};${end.longitude},${end.latitude}'
+      '?overview=full&geometries=geojson',
+    );
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'User-Agent': 'StudyPal/1.0',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      return null;
+    }
+
+    final Map<String, dynamic> data = jsonDecode(response.body);
+    final List<dynamic>? routes = data['routes'];
+    if (routes == null || routes.isEmpty) {
+      return null;
+    }
+
+    final route = routes.first as Map<String, dynamic>;
+    final geometry = route['geometry'] as Map<String, dynamic>?;
+    final List<dynamic>? coordinates = geometry?['coordinates'];
+    if (coordinates == null || coordinates.isEmpty) {
+      return null;
+    }
+
+    // OSRM mengembalikan [longitude, latitude], sehingga dibalik menjadi LatLng(lat, lon)
+    final points = coordinates.map<LatLng>((coord) {
+      final pair = coord as List<dynamic>;
+      final lon = (pair[0] as num).toDouble();
+      final lat = (pair[1] as num).toDouble();
+      return LatLng(lat, lon);
+    }).toList();
+
+    final distanceMeters = (route['distance'] as num?)?.toDouble() ??
+        calculateDistanceMeters(
+          startLat: start.latitude,
+          startLng: start.longitude,
+          endLat: end.latitude,
+          endLng: end.longitude,
+        );
+
+    return RouteResult(
+      points: points,
+      distanceMeters: distanceMeters,
+    );
+  }
 
 //LBSnya 
   Future<LatLng?> getCurrentUserPosition() async {
