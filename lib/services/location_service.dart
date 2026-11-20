@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:studypal/models/location.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 
 class LocationService {
   Future<List<Location>> searchLocations( //mengembalikan kumpulan objek Location.
@@ -58,5 +60,57 @@ class LocationService {
         'Gagal mengambil data lokasi: ${response.statusCode}',
       );
     }
+  }
+
+
+//LBSnya 
+  Future<LatLng?> getCurrentUserPosition() async {
+
+    //cek apakah gps dinyalain, kalau gak dibalikin null 
+    final serviceEnable = await Geolocator.isLocationServiceEnabled(); 
+    if(!serviceEnable) {
+      return null;
+    }
+
+    //cek status izin lokasi 
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) { //minta izin kalau denied 
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return null;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) { //kalau user gak izinin samsek
+      return null;
+    }
+
+    //ambil koordinat user saat ini 
+    final position = await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+      ),
+    );
+
+    //ubah data menjadi object latLng 
+    return LatLng(position.latitude, position.longitude);
+  }
+
+  //hitung jarak
+  double calculateDistanceMeters({
+    required double startLat,
+    required double startLng,
+    required double endLat,
+    required double endLng,
+  }) {
+    return Geolocator.distanceBetween(startLat, startLng, endLat, endLng);
+  }
+
+  String formatDistance(double meters) {
+    if (meters < 1000) {
+      return '${meters.round()} m';
+    }
+    final km = meters / 1000;
+    return '${km.toStringAsFixed(1)} km';
   }
 }

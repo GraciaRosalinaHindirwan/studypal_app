@@ -15,8 +15,8 @@ class Location {
     return Location(
       name: json['name'] ?? '',
       address: json['display_name'] ?? '',
-      latitude: double.parse(json['lat']),
-      longitude: double.parse(json['lon']),
+      latitude: double.tryParse(json['lat'].toString()) ?? 0.0,
+      longitude: double.tryParse(json['lon'].toString()) ?? 0.0,
     );
   }
 }
