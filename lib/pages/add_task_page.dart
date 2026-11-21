@@ -29,6 +29,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
   final titleController = TextEditingController();
   final descriptionController = TextEditingController();
   Location? selectedLocation; 
+  String? selectedReminder;
 
   // null berarti user belum milih due date
   DateTime? dueDate;
@@ -77,6 +78,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
     //ambil nilai input
     final title = titleController.text.trim(); 
     final description = descriptionController.text.trim(); 
+    final reminderMin = _parseReminderToMinutes(selectedReminder);
 
     //validasi title 
     if(title.isEmpty){
@@ -92,7 +94,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       title: title, 
       description: description, 
       dueDate: dueDate,
-      reminderMinutes: [],
+      reminderMinutes: reminderMin != null ? [reminderMin] : [],
       notificationIds: {},
       createdAt: DateTime.now(),
 
@@ -132,6 +134,35 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
   }
 
+  //helper
+  int? _parseReminderToMinutes(String? reminder) {
+    if (reminder == null || reminder.trim().isEmpty) return null;
+
+    final text = reminder.trim().toLowerCase();
+    if (text == 'saat acara dimulai') return 0;
+
+    final words = text.split(' ');
+    if (words.isEmpty) return null;
+
+    final value = int.tryParse(words[0]);
+    if (value == null || value < 0) return null;
+    if (value == 0) return 0;
+    if (words.length < 2) return null;
+
+    final unit = words[1];
+    if (unit.startsWith('menit') || unit.startsWith('minute')) {
+      return value;
+    }
+    if (unit.startsWith('jam') || unit.startsWith('hour')) {
+      return value * 60;
+    }
+    if (unit.startsWith('hari') || unit.startsWith('day')) {
+      return value * 60 * 24;
+    }
+
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return SubPageLayout(
@@ -156,33 +187,51 @@ class _AddTaskPageState extends State<AddTaskPage> {
               hint: 'Description',
               controller: descriptionController,
             ),
+            
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              spacing: 10,
               children: [
-                OptionChip(
-                  label: dueDate == null ? 'Due Date' : formatDueDate(dueDate!),
-                  icon: Icons.calendar_today_outlined,
-                  onTap: pickDueDate,
+                Expanded(
+                  child: OptionChip(
+                    label: dueDate == null ? 'Due Date' : formatDueDate(dueDate!),
+                    icon: Icons.calendar_today_outlined,
+                    onTap: pickDueDate,
+                  ),
                 ),
-                OptionChip(
-                  label: 'Reminder',
-                  icon: Icons.notifications_none,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const NotificationPage(),
-                      ),
-                    );
-                  },
+                Expanded(
+                  child: OptionChip(
+                    label: selectedReminder ?? 'Reminder',
+                    icon: Icons.notifications_none,
+                    onTap: () async {
+                      final result = await Navigator.push<String>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => NotificationPage(
+                            dueDate: dueDate,
+                            initialReminder: selectedReminder,
+                          ),
+                        ),
+                      );
+
+                      if (!mounted || result == null) return;
+
+                      setState(() {
+                        selectedReminder = result;
+                      });
+                    },
+                  ),
                 ),
-                OptionChip(
-                  label: selectedLocation?.name ?? 'Location',
-                  icon: Icons.location_on_outlined,
-                  onTap: pickLocation,
+                Expanded(
+                  child: OptionChip(
+                    label: selectedLocation?.name ?? 'Location',
+                    icon: Icons.location_on_outlined,
+                    onTap: pickLocation,
+                  ),
                 ),
               ],
             ),
+
             Row(
               spacing: 16,
               children: [

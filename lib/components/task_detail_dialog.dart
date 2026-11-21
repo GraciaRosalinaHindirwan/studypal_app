@@ -208,13 +208,13 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
     ? routeResult.points
     : [userPos, target];
 
-final meters = routeResult?.distanceMeters ??
-    _locationService.calculateDistanceMeters(
-      startLat: userPos.latitude,
-      startLng: userPos.longitude,
-      endLat: target.latitude,
-      endLng: target.longitude,
-    );
+    final meters = routeResult?.distanceMeters ??
+        _locationService.calculateDistanceMeters(
+          startLat: userPos.latitude,
+          startLng: userPos.longitude,
+          endLat: target.latitude,
+          endLng: target.longitude,
+        );
 
     setState(() {
       _userPosition = userPos;
@@ -224,6 +224,97 @@ final meters = routeResult?.distanceMeters ??
 
     //supaya 2 titik keliat jelas 
     _fitCameraIfPossible();
+  }
+
+  DateTime? _parseDueDate(String raw) {
+    // Mendukung format 'dd/MM/yyyy HH:mm' yang dipakai di TaskPage.formatTaskDate
+    final parts = raw.trim().split(' ');
+    if (parts.length != 2) return null;
+
+    final dateParts = parts[0].split('/');
+    final timeParts = parts[1].split(':');
+    if (dateParts.length != 3 || timeParts.length != 2) return null;
+
+    final day = int.tryParse(dateParts[0]);
+    final month = int.tryParse(dateParts[1]);
+    final year = int.tryParse(dateParts[2]);
+    final hour = int.tryParse(timeParts[0]);
+    final minute = int.tryParse(timeParts[1]);
+
+    if (day == null ||
+        month == null ||
+        year == null ||
+        hour == null ||
+        minute == null) {
+      return null;
+    }
+
+    return DateTime(year, month, day, hour, minute);
+  }
+
+  Duration? _parseReminderDuration(String raw) {
+    final cleaned = raw.replaceAll('[', '').replaceAll(']', '').trim().toLowerCase();
+    if (cleaned.isEmpty || cleaned == 'no reminder') return null;
+
+    // Jika hanya angka (misalnya "15" dari reminderMinutes), anggap sebagai menit
+    final onlyNumber = int.tryParse(cleaned);
+    if (onlyNumber != null && onlyNumber >= 0) {
+      return Duration(minutes: onlyNumber);
+    }
+
+    final words = cleaned.split(' ');
+    if (words.isEmpty) return null;
+
+    final value = int.tryParse(words[0]);
+    if (value == null || value < 0) return null;
+    if (value == 0) return Duration.zero;
+    if (words.length < 2) return null;
+
+    final unit = words[1];
+    if (unit.startsWith('menit') || unit.startsWith('minute')) {
+      return Duration(minutes: value);
+    }
+    if (unit.startsWith('jam') || unit.startsWith('hour')) {
+      return Duration(hours: value);
+    }
+    if (unit.startsWith('hari') || unit.startsWith('day')) {
+      return Duration(days: value);
+    }
+
+    return null;
+  }
+
+  String _formatDateTime(DateTime dt) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${two(dt.day)}/${two(dt.month)}/${dt.year} ${two(dt.hour)}:${two(dt.minute)}';
+  }
+
+  //helper
+  String _formatReminderLabel(String raw, Duration duration) {
+    final cleaned = raw.replaceAll('[', '').replaceAll(']', '').trim();
+    if (int.tryParse(cleaned) != null) {
+      final totalMinutes = duration.inMinutes;
+      if (totalMinutes == 0) return 'Saat Acara Dimulai';
+      if (totalMinutes % (60 * 24) == 0) {
+        final days = totalMinutes ~/ (60 * 24);
+        return '$days Hari sebelum';
+      }
+      if (totalMinutes % 60 == 0) {
+        final hours = totalMinutes ~/ 60;
+        return '$hours Jam sebelum';
+      }
+      return '$totalMinutes menit sebelum';
+    }
+    return cleaned;
+  }
+
+  String _buildReminderDisplay() {
+    final duration = _parseReminderDuration(widget.reminder);
+    if (duration == null) {
+      return widget.reminder;
+    }
+
+    return _formatReminderLabel(widget.reminder, duration);
   }
 
   @override
@@ -325,7 +416,7 @@ final meters = routeResult?.distanceMeters ??
                               _buildInfoItem(
                                 icon: Icons.alarm,
                                 label: 'Reminder',
-                                value: widget.reminder,
+                                value: _buildReminderDisplay(),
                               ),
                     
                               const SizedBox(height: 14),

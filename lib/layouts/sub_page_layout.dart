@@ -5,11 +5,13 @@ import 'package:studypal/theme/app_colors.dart';
 class SubPageLayout extends StatelessWidget {
   final Widget child;
   final String bottomImage;
+  final VoidCallback? onBack;
 
   const SubPageLayout({
     super.key,
     required this.child,
     this.bottomImage = 'assets/img/logoLaptop.png',
+    this.onBack,
   });
 
   @override
@@ -21,7 +23,7 @@ class SubPageLayout extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             children: [
-              const HeaderSub(),
+              HeaderSub(onBack: onBack),
               child,
               Expanded(
                 child: Align(

@@ -29,6 +29,8 @@ class UpdateTaskPage extends StatefulWidget {
 
 class _UpdateTaskPageState extends State<UpdateTaskPage> {
   Location? selectedLocation;
+  String? selectedReminder;
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +38,9 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
     titleController.text = widget.task.title;
     descriptionController.text = widget.task.description;
     dueDate = widget.task.dueDate;
+    if (widget.task.reminderMinutes.isNotEmpty) {
+      selectedReminder = _minutesToReminderLabel(widget.task.reminderMinutes.first);
+    }
 
     if (widget.task.latitude != null &&
         widget.task.longitude != null) {
@@ -82,6 +87,7 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
     // 1. Ambil nilai terbaru dari form
     final title = titleController.text.trim();
     final description = descriptionController.text.trim();
+    final reminderMin = _parseReminderToMinutes(selectedReminder);
 
     // 2. Validasi title
     if (title.isEmpty) {
@@ -104,7 +110,7 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
       locationAddress: selectedLocation?.address,
       latitude: selectedLocation?.latitude,
       longitude: selectedLocation?.longitude,
-      reminderMinutes: widget.task.reminderMinutes,
+      reminderMinutes: reminderMin != null ? [reminderMin] : [],
       notificationIds: widget.task.notificationIds,
       createdAt: widget.task.createdAt,
     );
@@ -158,6 +164,49 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
     });
   }
 
+  //helper
+ String? _minutesToReminderLabel(int minutes) {
+    if (minutes < 0) return null;
+    if (minutes == 0) return 'Saat Acara Dimulai';
+    if (minutes % (60 * 24) == 0) {
+      final days = minutes ~/ (60 * 24);
+      return '$days Hari sebelum';
+    }
+    if (minutes % 60 == 0) {
+      final hours = minutes ~/ 60;
+      return '$hours Jam sebelum';
+    }
+    return '$minutes menit sebelum';
+  }
+
+  int? _parseReminderToMinutes(String? reminder) {
+    if (reminder == null || reminder.trim().isEmpty) return null;
+
+    final text = reminder.trim().toLowerCase();
+    if (text == 'saat acara dimulai') return 0;
+
+    final words = text.split(' ');
+    if (words.isEmpty) return null;
+
+    final value = int.tryParse(words[0]);
+    if (value == null || value < 0) return null;
+    if (value == 0) return 0;
+    if (words.length < 2) return null;
+
+    final unit = words[1];
+    if (unit.startsWith('menit') || unit.startsWith('minute')) {
+      return value;
+    }
+    if (unit.startsWith('jam') || unit.startsWith('hour')) {
+      return value * 60;
+    }
+    if (unit.startsWith('hari') || unit.startsWith('day')) {
+      return value * 60 * 24;
+    }
+
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return SubPageLayout(
@@ -182,34 +231,51 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
               hint: 'Description',
               controller: descriptionController,
             ),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              spacing: 10,
               children: [
-                OptionChip(
-                  label: dueDate == null ? 'Due Date' : formatDueDate(dueDate!),
-                  icon: Icons.calendar_today_outlined,
-                  onTap: pickDueDate,
+                Expanded(
+                  child: OptionChip(
+                    label: dueDate == null ? 'Due Date' : formatDueDate(dueDate!),
+                    icon: Icons.calendar_today_outlined,
+                    onTap: pickDueDate,
+                  ),
                 ),
-                OptionChip(
-                  label: 'Reminder',
-                  icon: Icons.notifications_none,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const NotificationPage(),
-                      ),
-                    );
-                  },
+                Expanded(
+                  child: OptionChip(
+                    label: selectedReminder ?? 'Reminder',
+                    icon: Icons.notifications_none,
+                    onTap: () async {
+                      final result = await Navigator.push<String>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => NotificationPage(
+                            dueDate: dueDate,
+                            initialReminder: selectedReminder,
+                          ),
+                        ),
+                      );
+
+                      if (!mounted || result == null) return;
+
+                      setState(() {
+                        selectedReminder = result;
+                      });
+                    },
+                  ),
                 ),
-                OptionChip(
-                  label: selectedLocation?.name ?? 'Location',
-                  icon: Icons.location_on_outlined,
-                  onTap: pickLocation,
-                  
+                Expanded(
+                  child: OptionChip(
+                    label: selectedLocation?.name ?? 'Location',
+                    icon: Icons.location_on_outlined,
+                    onTap: pickLocation,
+                  ),
                 ),
               ],
             ),
+
             Row(
               spacing: 16,
               children: [
