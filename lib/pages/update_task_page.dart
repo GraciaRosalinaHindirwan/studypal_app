@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:studypal/models/task.dart';
 import 'package:studypal/models/location.dart';
 import 'package:studypal/pages/pick_location_page.dart';
+import 'package:studypal/services/notification_service.dart';
 import 'package:studypal/services/task_service.dart';
 
 import 'package:studypal/components/app_button.dart';
@@ -99,23 +100,46 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
       return;
     }
 
-    // 3. Buat objek Task dengan data terbaru
-    final updatedTask = Task(
-      id: widget.task.id,
-      title: title,
-      description: description,
-      isCompleted: widget.task.isCompleted,
-      dueDate: dueDate,
-      locationName: selectedLocation?.name,
-      locationAddress: selectedLocation?.address,
-      latitude: selectedLocation?.latitude,
-      longitude: selectedLocation?.longitude,
-      reminderMinutes: reminderMin != null ? [reminderMin] : [],
-      notificationIds: widget.task.notificationIds,
-      createdAt: widget.task.createdAt,
-    );
-
     try {
+      // 3. Batalkan notifikasi lama milik task sebelum diupdate
+      await NotificationService.instance.cancelTaskReminders(widget.task);
+
+      // 4. Buat draf Task dengan data terbaru
+      final draftTask = Task(
+        id: widget.task.id,
+        title: title,
+        description: description,
+        isCompleted: widget.task.isCompleted,
+        dueDate: dueDate,
+        locationName: selectedLocation?.name,
+        locationAddress: selectedLocation?.address,
+        latitude: selectedLocation?.latitude,
+        longitude: selectedLocation?.longitude,
+        reminderMinutes: reminderMin != null ? [reminderMin] : [],
+        notificationIds: const {},
+        createdAt: widget.task.createdAt,
+      );
+
+      // 5. Jadwalkan ulang notifikasi sesuai dueDate & reminderMinutes baru
+      final scheduledIds =
+          await NotificationService.instance.scheduleTaskReminders(draftTask);
+      
+      // 6. Susun Task final yang membawa notificationIds terbaru
+      final updatedTask = Task(
+        id: draftTask.id,
+        title: draftTask.title,
+        description: draftTask.description,
+        isCompleted: draftTask.isCompleted,
+        dueDate: draftTask.dueDate,
+        locationName: draftTask.locationName,
+        locationAddress: draftTask.locationAddress,
+        latitude: draftTask.latitude,
+        longitude: draftTask.longitude,
+        reminderMinutes: draftTask.reminderMinutes,
+        notificationIds: scheduledIds,
+        createdAt: draftTask.createdAt,
+      );
+      
       // 4. Akses Hive Box
       final taskBox = Hive.box<Task>('tasks');
 

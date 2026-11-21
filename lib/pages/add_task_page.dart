@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:studypal/services/notification_service.dart';
 import 'package:studypal/services/task_service.dart';
 
 import 'package:studypal/components/app_button.dart';
@@ -79,7 +80,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
     final title = titleController.text.trim(); 
     final description = descriptionController.text.trim(); 
     final reminderMin = _parseReminderToMinutes(selectedReminder);
-
+    
     //validasi title 
     if(title.isEmpty){
       ScaffoldMessenger.of(context).showSnackBar(
@@ -88,24 +89,44 @@ class _AddTaskPageState extends State<AddTaskPage> {
       return; 
     }
 
-    //buat object task 
-    final task = Task(
-      id: DateTime.now().microsecondsSinceEpoch.toString(), 
-      title: title, 
-      description: description, 
-      dueDate: dueDate,
-      reminderMinutes: reminderMin != null ? [reminderMin] : [],
-      notificationIds: {},
-      createdAt: DateTime.now(),
-
-      // Data lokasi
-      locationName: selectedLocation?.name,
-      locationAddress: selectedLocation?.address,
-      latitude: selectedLocation?.latitude,
-      longitude: selectedLocation?.longitude,
-    ); 
-
     try {
+
+      //buat object task 
+      final task = Task(
+        id: DateTime.now().microsecondsSinceEpoch.toString(), 
+        title: title, 
+        description: description, 
+        dueDate: dueDate,
+        reminderMinutes: reminderMin != null ? [reminderMin] : [],
+        notificationIds: {},
+        createdAt: DateTime.now(),
+
+        // Data lokasi
+        locationName: selectedLocation?.name,
+        locationAddress: selectedLocation?.address,
+        latitude: selectedLocation?.latitude,
+        longitude: selectedLocation?.longitude,
+      );
+
+      // jadwalkan notifikasi & ambil map ID-nya
+      final scheduledIds = await NotificationService.instance.scheduleTaskReminders(task); 
+
+      // buat task final yang sudah membawa notificationIds
+      final taskToSave = Task(
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        isCompleted: task.isCompleted,
+        dueDate: task.dueDate,
+        locationName: task.locationName,
+        locationAddress: task.locationAddress,
+        latitude: task.latitude,
+        longitude: task.longitude,
+        reminderMinutes: task.reminderMinutes,
+        notificationIds: scheduledIds,
+        createdAt: task.createdAt,
+      );
+
       //menghubungkan dengan Hive
       final taskBox = Hive.box<Task>('tasks'); 
       final taskService = TaskService(taskBox); 

@@ -4,6 +4,7 @@ import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_button_secondary.dart';
 import 'package:studypal/models/task.dart';
 import 'package:studypal/services/task_service.dart';
+import 'package:studypal/services/notification_service.dart';
 
 import 'package:studypal/components/app_text_field.dart';
 import 'package:studypal/components/task_card.dart';
@@ -33,14 +34,17 @@ class _TaskPageState extends State<TaskPage> {
 
   Future<void> deleteTask(Task task) async{
     try {
-      //akses hive box 
-      final taskBox = Hive.box<Task>('tasks'); 
+      // batalkan semua notifikasi terjadwal untuk task ini
+      await NotificationService.instance.cancelTaskReminders(task);
+
+      // akses hive box
+      final taskBox = Hive.box<Task>('tasks');
       final taskService = TaskService(taskBox);
 
-      //menghapus task id 
-      await taskService.deleteTask(task.id); 
+      // menghapus task id
+      await taskService.deleteTask(task.id);
 
-      if(!mounted) return; 
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -48,7 +52,7 @@ class _TaskPageState extends State<TaskPage> {
         ),
       );
     } catch (e) {
-      if(!mounted) return; 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Gagal menghapus task: $e'),
@@ -329,18 +333,23 @@ class _TaskPageState extends State<TaskPage> {
 
   Future<void> toggleTaskStatus(Task task) async {
     try {
+      final nextCompleted = !task.isCompleted;
+      if (nextCompleted) {
+        await NotificationService.instance.cancelTaskReminders(task);
+      }
+
       final updatedTask = Task(
         id: task.id,
         title: task.title,
         description: task.description,
-        isCompleted: !task.isCompleted,
+        isCompleted: nextCompleted,
         locationName: task.locationName,
         locationAddress: task.locationAddress,
         latitude: task.latitude,
         longitude: task.longitude,
         dueDate: task.dueDate,
         reminderMinutes: task.reminderMinutes,
-        notificationIds: task.notificationIds,
+        notificationIds: nextCompleted ? const {} : task.notificationIds,
         createdAt: task.createdAt,
       );
 
