@@ -157,7 +157,7 @@ class _TaskPageState extends State<TaskPage> {
       try {
         final controller = Get.find<TaskController>();
         await controller.deleteTask(task);
-        
+
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

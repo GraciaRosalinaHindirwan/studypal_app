@@ -92,10 +92,15 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
 
     // 2. Validasi title
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Title tidak boleh kosong'),
-        ),
+      Get.snackbar(
+        'Warning',
+        'Title cannot be empty!',
+        snackPosition: SnackPosition.BOTTOM,
+        colorText: AppColors.textPrimary,                     
+        icon: const Icon(Icons.warning, color: AppColors.accent), 
+        margin: const EdgeInsets.all(16),            
+        borderRadius: 16,                           
+        duration: const Duration(seconds: 2),   
       );
       return;
     }
@@ -148,7 +153,16 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
       
       // Kembali dan beri notifikasi
       Get.back();
-      Get.snackbar('Sukses', 'Task berhasil diperbarui!');
+      Get.snackbar(
+        'Success',
+        'Task update successfully!',
+        snackPosition: SnackPosition.BOTTOM,
+        colorText: AppColors.textPrimary,                     
+        icon: const Icon(Icons.check_circle, color: AppColors.textSecondary), 
+        margin: const EdgeInsets.all(16),            
+        borderRadius: 16,                           
+        duration: const Duration(seconds: 2),   
+      );
     } catch (e) {
       if (!mounted) return;
 

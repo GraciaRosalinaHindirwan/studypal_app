@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:studypal/models/task.dart';
@@ -97,6 +98,7 @@ class TaskController extends GetxController{
         'Berhasil',
         'Tugas "${task.title}" berhasil dihapus!',
         snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),   
       );
     } catch (e) {
       Get.snackbar('Gagal', 'Terjadi kesalahan: $e');

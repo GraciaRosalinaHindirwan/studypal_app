@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_text_field.dart';
 import 'package:studypal/layouts/main_app_layout.dart';
@@ -53,8 +54,10 @@ class _LoginPageState extends State<LoginPage> {
       passwordController.text,
     );
     if (index == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Username atau password salah')),
+      Get.snackbar(
+        'Login Failed',
+        'Incorrect username or password!',
+        snackPosition: SnackPosition.BOTTOM,
       );
       return;
     }

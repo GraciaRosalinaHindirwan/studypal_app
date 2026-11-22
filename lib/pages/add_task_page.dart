@@ -84,11 +84,18 @@ class _AddTaskPageState extends State<AddTaskPage> {
     final reminderMin = _parseReminderToMinutes(selectedReminder);
     
     //validasi title 
-    if(title.isEmpty){
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Title tidak boleh kosong"))
+    if (title.isEmpty) {
+      Get.snackbar(
+        'Warning',
+        'Title cannot be empty!',
+        snackPosition: SnackPosition.BOTTOM,
+        colorText: AppColors.textPrimary,                     
+        icon: const Icon(Icons.warning, color: AppColors.accent), 
+        margin: const EdgeInsets.all(16),            
+        borderRadius: 16,                           
+        duration: const Duration(seconds: 2),   
       );
-      return; 
+      return;
     }
 
     try {
@@ -137,7 +144,16 @@ class _AddTaskPageState extends State<AddTaskPage> {
       
       // 3. Tampilkan pesan & kembali ke halaman sebelumnya
       Get.back();
-      Get.snackbar('Sukses', 'Task berhasil ditambahkan!');
+       Get.snackbar(
+        'Success',
+        'Task added successfully!',
+        snackPosition: SnackPosition.BOTTOM,
+        colorText: AppColors.textPrimary,                     
+        icon: const Icon(Icons.check_circle, color: AppColors.textSecondary), 
+        margin: const EdgeInsets.all(16),            
+        borderRadius: 16,                           
+        duration: const Duration(seconds: 2),   
+      );
       
     } catch (e) {
       if (!mounted) return;
