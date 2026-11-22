@@ -46,7 +46,7 @@ class HomePage extends StatelessWidget {
                 TodayPickCard(
                   tasks: controller.todayTasks,
                   onToggleTask: (task) {
-                    task.isCompleted = !(task.isCompleted ?? false); 
+                    task.isCompleted = !task.isCompleted;
                     controller.updateTask(task); 
                   },
                 ), 
