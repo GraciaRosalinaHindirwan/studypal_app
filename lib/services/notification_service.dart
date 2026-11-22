@@ -16,19 +16,20 @@ class NotificationService {
   bool _isInitialized = false;
 
   Future<void> init() async {
-    if (_isInitialized) return;
+    if (_isInitialized) return; 
 
-    tz.initializeTimeZones();
+    tz.initializeTimeZones(); //buat database seluruh zona waktu agar konversi jadwal ke waktu akurat. 
+
+    //deteksi zona waktu perangkat
     try {
-      final localTimezone = await FlutterTimezone.getLocalTimezone();
-      final timeZoneName = localTimezone.toString();
+      final localTimezone = await FlutterTimezone.getLocalTimezone(); 
+      final timeZoneName = localTimezone.toString(); 
       tz.setLocalLocation(tz.getLocation(timeZoneName));
     } catch (_) {
-      tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
+      tz.setLocalLocation(tz.getLocation('Asia/Jakarta')); //kalau gagal baca zona waktu 'Asia/Jakarta' 
     }
 
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const darwinSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -43,15 +44,14 @@ class NotificationService {
 
     await _plugin.initialize(settings: initSettings);
 
-    final androidPlugin =
-        _plugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    //minta izin notifikasi 
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     await androidPlugin?.requestNotificationsPermission();
 
     _isInitialized = true;
   }
 
-  //helper
+  //helper = ubah angka menit menjadi label. 
   String _formatReminderLabel(int minutes) {
     if (minutes == 0) return 'saat acara dimulai';
     if (minutes % (60 * 24) == 0) {
@@ -65,11 +65,14 @@ class NotificationService {
     return '$minutes menit sebelum';
   }
 
+  //jadwalin notifikasi per task 
   Future<Map<int, int>> scheduleTaskReminders(Task task) async { {
-    await init();
+    await init(); //pastiin init sudah berjalan 
 
     final Map<int, int> scheduledIds = {};
+
     final due = task.dueDate;
+
     if (due == null || task.reminderMinutes.isEmpty) {
       return scheduledIds;
     }
@@ -77,12 +80,17 @@ class NotificationService {
     final now = DateTime.now();
 
     for (final minutes in task.reminderMinutes) {
+      //kurangin due date sama durasi untuk dapet trigger date 
       final triggerDate = due.subtract(Duration(minutes: minutes));
+      //kalau trigger date udah lewat / sama kayak waktu sekarang lewatin 
       if (!triggerDate.isAfter(now)) continue;
 
       final notificationId = Object.hash(task.id, minutes) & 0x7fffffff;
+
+      //ubah triggerdate jadi TZDateTime sesuai waktu lokal 
       final tzDate = tz.TZDateTime.from(triggerDate, tz.local);
 
+      //tampilan notifikasi 
       const androidDetails = AndroidNotificationDetails(
         'studypal_reminders',
         'StudyPal Reminders',
@@ -99,6 +107,7 @@ class NotificationService {
         macOS: darwinDetails,
       );
 
+      //jadwalin notifikasi 
       await _plugin.zonedSchedule(
         id: notificationId,
         title: 'StudyPal: ${task.title}',
