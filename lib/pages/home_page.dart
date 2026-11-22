@@ -7,7 +7,6 @@ import 'package:studypal/components/today_pick_card.dart';
 import 'package:studypal/components/today_plan_progress.dart';
 import 'package:studypal/controller/task_controller.dart';
 import 'package:studypal/controller/theme_controller.dart';
-import 'package:studypal/pages/add_task_page.dart';
 import 'package:studypal/routes/app_routes.dart';
 import 'package:studypal/theme/app_colors.dart';
 

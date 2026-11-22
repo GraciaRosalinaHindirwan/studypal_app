@@ -231,13 +231,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     label: selectedReminder ?? 'Reminder',
                     icon: Icons.notifications_none,
                     onTap: () async {
-                      final result = await Navigator.push<String>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => NotificationPage(
-                            dueDate: dueDate,
-                            initialReminder: selectedReminder,
-                          ),
+                      final result = await Get.to<String>(
+                        () => NotificationPage(
+                          dueDate: dueDate,
+                          initialReminder: selectedReminder,
                         ),
                       );
 
@@ -265,7 +262,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 Expanded(
                   child: AppButtonSecondary(
                     label: 'Cancel Task',
-                    onTap: () => Navigator.pop(context),
+                    onTap: () =>  Get.back(),
                   ),
                 ),
                 Expanded(
