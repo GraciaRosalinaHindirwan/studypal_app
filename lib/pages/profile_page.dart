@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart'; // 1. Import GetX
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_button_secondary.dart';
 import 'package:studypal/components/app_text_field.dart';
 import 'package:studypal/components/header_sub.dart';
+import 'package:studypal/controller/theme_controller.dart';
 import 'package:studypal/models/user_model.dart';
 import 'package:studypal/pages/login_page.dart';
 import 'package:studypal/services/user_service.dart';
@@ -29,9 +30,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
   late UserModel user;
 
-  // field dikunci dulu, kebuka setelah tombol pensil ditekan
+  // Field dikunci dulu, kebuka setelah tombol pensil ditekan
   bool isEditingEmail = false;
   bool isEditingUsername = false;
+
+  // Variabel untuk memantau status Dark Mode
+  bool isDark = Get.isDarkMode;
 
   @override
   void initState() {
@@ -63,19 +67,16 @@ class _ProfilePageState extends State<ProfilePage> {
 
       final bytes = await picked.readAsBytes();
       await UserService.updatePhoto(widget.userIndex, bytes);
-      if (!mounted) return;
       setState(() => user = UserService.getByIndex(widget.userIndex)!);
+      
+      Get.snackbar('Sukses', 'Foto profil berhasil diubah!');
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal ganti foto: $e')),
-      );
+      Get.snackbar('Gagal', 'Gagal ganti foto: $e');
     }
   }
 
   void _enableEdit(FocusNode focus, VoidCallback unlock) {
     setState(unlock);
-    // fokus setelah frame selesai, biar readOnly-nya udah kebuka
     WidgetsBinding.instance.addPostFrameCallback((_) => focus.requestFocus());
   }
 
@@ -87,7 +88,6 @@ class _ProfilePageState extends State<ProfilePage> {
       password: passwordController.text,
       confirm: confirmController.text,
     );
-    if (!mounted) return;
 
     if (error == null) {
       passwordController.clear();
@@ -97,31 +97,28 @@ class _ProfilePageState extends State<ProfilePage> {
         isEditingEmail = false;
         isEditingUsername = false;
       });
+      Get.snackbar('Sukses', 'Profil berhasil disimpan!');
+    } else {
+      Get.snackbar('Peringatan', error);
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(error ?? 'Profil berhasil disimpan')),
-    );
   }
 
   Future<void> _logout() async {
-    // set loginData jadi false di Shared Preferences
     await UserService.logout();
-    if (!mounted) return;
-    // hapus semua halaman di stack, jadi ga bisa back ke aplikasi
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-      (route) => false,
-    );
+    // GetX: Keluar & hapus semua tumpukan halaman agar tidak bisa di-back
+    Get.offAll(() => const LoginPage());
   }
 
-  Widget _sectionLabel(String text) {
+   Widget _sectionLabel(String text) {
+    // 1. Ambil controller tema
+    final themeController = Get.find<ThemeController>();
     return Align(
       alignment: Alignment.centerLeft,
       child: Text(
         text,
-        style: const TextStyle(
-          color: Colors.black,
+        style: TextStyle(
+          // Jika gelap warnanya putih, jika terang warnanya hitam (atau warna primary)
+          color: themeController.isDarkMode.value ? Colors.white : AppColors.primary,
           fontSize: 16,
           fontFamily: 'Poppins',
           fontWeight: FontWeight.w600,
@@ -130,7 +127,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // field + tombol pensil, tinggi pensil ngikutin tinggi field
   Widget _editableField({
     required String hint,
     required TextEditingController controller,
@@ -155,16 +151,25 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           GestureDetector(
             onTap: onEdit,
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
               width: 56,
               decoration: BoxDecoration(
+                // JIKA SEDANG DIEDIT: Latar belakang jadi warna Primary (Ungu/Biru)
+                // JIKA TIDAK DIEDIT: Latar belakang transparan
+                color: isEditing ? AppColors.primary : Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.secondary, width: 3),
+                border: Border.all(
+                  color: isEditing ? AppColors.primary : AppColors.secondary,
+                  width: 3,
+                ),
               ),
-              child: const Icon(
-                Icons.edit_outlined,
+              child: Icon(
+                // JIKA SEDANG DIEDIT: Icon berubah jadi centang
+                // JIKA TIDAK DIEDIT: Icon pensil
+                isEditing ? Icons.check : Icons.edit_outlined,
                 size: 20,
-                color: AppColors.secondary,
+                color: isEditing ? Colors.white : AppColors.secondary,
               ),
             ),
           ),
@@ -176,110 +181,180 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final hasPhoto = user.photoBytes != null;
+    final ThemeController themeController = Get.put(ThemeController()); 
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            spacing: 16,
-            children: [
-              const HeaderSub(),
-              SizedBox(
-                width: 150,
-                height: 150,
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 150,
-                      height: 150,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppColors.accent,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.primary, width: 2),
-                        image: hasPhoto
-                            ? DecorationImage(
-                                image: MemoryImage(user.photoBytes!),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                      ),
-                      // foto kalau ada, kalau engga inisial
-                      child: hasPhoto
-                          ? null
-                          : Text(
-                              user.username[0].toUpperCase(),
-                              style: const TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 48,
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.w700,
+    return Obx((){
+      return Scaffold(
+        backgroundColor: themeController.currentBackground,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              spacing: 16,
+              children: [
+                const HeaderSub(),
+      
+                // Foto Profil
+                SizedBox(
+                  width: 150,
+                  height: 150,
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 150,
+                        height: 150,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppColors.accent,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.primary, width: 2),
+                          image: hasPhoto
+                              ? DecorationImage(
+                                  image: MemoryImage(user.photoBytes!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: hasPhoto
+                            ? null
+                            : Text(
+                                user.username[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 48,
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: GestureDetector(
+                          onTap: _pickPhoto,
+                          child: Container(
+                            width: 50,
+                            height: 50,
+                            decoration: const BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
                             ),
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: GestureDetector(
-                        onTap: _pickPhoto,
-                        child: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.photo_camera_outlined,
-                            color: Colors.white,
-                            size: 24,
+                            child: const Icon(
+                              Icons.photo_camera_outlined,
+                              color: Colors.white,
+                              size: 24,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              _sectionLabel('Profile'),
-              _editableField(
-                hint: 'Email',
-                controller: emailController,
-                focusNode: emailFocus,
-                isEditing: isEditingEmail,
-                onEdit: () =>
-                    _enableEdit(emailFocus, () => isEditingEmail = true),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              _editableField(
-                hint: 'Username',
-                controller: usernameController,
-                focusNode: usernameFocus,
-                isEditing: isEditingUsername,
-                onEdit: () =>
-                    _enableEdit(usernameFocus, () => isEditingUsername = true),
-              ),
-              _sectionLabel('Edit Password'),
-              AppTextField(
-                hint: 'Password',
-                controller: passwordController,
-                obscureText: true,
-              ),
-              AppTextField(
-                hint: 'Confirm new password',
-                controller: confirmController,
-                obscureText: true,
-              ),
-              const SizedBox(height: 8),
-              AppButton(label: 'Save', onTap: _save),
-              AppButtonSecondary(label: 'Logout', onTap: _logout),
-              const SizedBox(height: 24),
-            ],
+                const SizedBox(height: 8),
+      
+                // Bagian Profil
+                _sectionLabel('Profile'),
+                _editableField(
+                  hint: 'Email',
+                  controller: emailController,
+                  focusNode: emailFocus,
+                  isEditing: isEditingEmail,
+                  onEdit: () {
+                    if (isEditingEmail) {
+                      setState(() => isEditingEmail = false); // Tutup edit kalau ditekan lagi
+                    } else {
+                      _enableEdit(emailFocus, () => isEditingEmail = true);
+                    }
+                  },
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                _editableField(
+                  hint: 'Username',
+                  controller: usernameController,
+                  focusNode: usernameFocus,
+                  isEditing: isEditingUsername,
+                  onEdit: () {
+                    if (isEditingUsername) {
+                      setState(() => isEditingUsername = false);
+                    } else {
+                      _enableEdit(usernameFocus, () => isEditingUsername = true);
+                    }
+                  },
+                ),
+      
+                // Bagian Edit Password
+                _sectionLabel('Edit Password'),
+                AppTextField(
+                  hint: 'Password',
+                  controller: passwordController,
+                  obscureText: true,
+                ),
+                AppTextField(
+                  hint: 'Confirm new password',
+                  controller: confirmController,
+                  obscureText: true,
+                ),
+      
+                const SizedBox(height: 8),
+      
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    // Jika gelap pakai warna kartu gelap, jika terang pakai putih transparan
+                    color: themeController.isDarkMode.value 
+                        ? AppColors.darkSecondary 
+                        : Colors.white.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: themeController.isDarkMode.value 
+                          ? AppColors.darkBorder 
+                          : AppColors.secondary, 
+                      width: 2,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            themeController.isDarkMode.value ? Icons.dark_mode : Icons.light_mode,
+                            color: themeController.isDarkMode.value ? Colors.amber : AppColors.primary,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            themeController.isDarkMode.value ? 'Mode Gelap (Dark)' : 'Mode Terang (Light)',
+                            style: TextStyle(
+                              // Teks otomatis putih saat gelap, hitam saat terang
+                              color: themeController.isDarkMode.value ? Colors.white : Colors.black,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Switch(
+                        value: themeController.isDarkMode.value,
+                        activeColor: AppColors.darkPrimary,
+                        onChanged: (val) {
+                          themeController.toggleTheme();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+      
+                const SizedBox(height: 8),
+      
+                // Tombol Simpan & Logout
+                AppButton(label: 'Save', onTap: _save),
+                AppButtonSecondary(label: 'Logout', onTap: _logout),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
-        ),
-      ),
-    );
+        )
+      );
+    });
   }
 }
