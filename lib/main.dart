@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:studypal/models/task.dart';
-import 'package:studypal/pages/add_task_page.dart';
-import 'package:studypal/pages/home_page.dart';
-import 'package:studypal/pages/pick_location_page.dart';
-import 'package:studypal/pages/task_page.dart';
+import 'package:studypal/pages/login_page.dart';
 import 'package:studypal/services/notification_service.dart';
 
 Future<void> main() async {
@@ -32,7 +29,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: HomePage(),
+      home: LoginPage(),
     );
   }
 }

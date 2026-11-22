@@ -20,17 +20,24 @@ class MainAppLayout extends StatefulWidget {
 
 class _MainAppLayoutState extends State<MainAppLayout> {
   int selectedIndex = 0;
-  late UserModel user;
+  UserModel? user;
 
-  final List<Widget> pages = [
-    const HomePage(),
-    const TaskPage(),
+  final List<Widget> pages = const [
+    HomePage(),
+    TaskPage(),
   ];
 
   @override
   void initState() {
     super.initState();
-    user = UserService.getByIndex(widget.userIndex)!;
+    _loadUser();
+  }
+
+  void _loadUser() {
+    final loaded = UserService.getByIndex(widget.userIndex);
+    if (mounted) {
+      setState(() => user = loaded);
+    }
   }
 
   Future<void> _openProfile() async {
@@ -40,13 +47,15 @@ class _MainAppLayoutState extends State<MainAppLayout> {
         builder: (_) => ProfilePage(userIndex: widget.userIndex),
       ),
     );
-    // pas balik dari profil, ambil data terbaru biar header ikut berubah
-    final updated = UserService.getByIndex(widget.userIndex);
-    if (mounted && updated != null) setState(() => user = updated);
+    _loadUser();
   }
 
   @override
   Widget build(BuildContext context) {
+    final initial = (user?.username.isNotEmpty ?? false)
+        ? user!.username[0].toUpperCase()
+        : '?';
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -58,8 +67,8 @@ class _MainAppLayoutState extends State<MainAppLayout> {
                 vertical: 16,
               ),
               child: HeaderMain(
-                userInitial: user.username[0].toUpperCase(),
-                photoBytes: user.photoBytes,
+                userInitial: initial,
+                photoBytes: user?.photoBytes,
                 onAvatarTap: _openProfile,
               ),
             ),
@@ -69,9 +78,12 @@ class _MainAppLayoutState extends State<MainAppLayout> {
           ],
         ),
       ),
-      bottomNavigationBar: ButtomNavigatorBar(
-        selectedIndex: selectedIndex,
-        onItemSelected: (index) => setState(() => selectedIndex = index),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: ButtomNavigatorBar(
+          selectedIndex: selectedIndex,
+          onItemSelected: (index) => setState(() => selectedIndex = index),
+        ),
       ),
     );
   }

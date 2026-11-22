@@ -26,10 +26,46 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _register() async {
+    final email = emailController.text.trim();
+    final username = usernameController.text.trim();
+    final password = passwordController.text;
+
+    // 1. Cek kolom kosong
+    if (email.isEmpty || username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Semua kolom wajib diisi')),
+      );
+      return;
+    }
+
+    // 2. Cek format email sederhana
+    if (!email.contains('@') || !email.contains('.')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Format email tidak valid')),
+      );
+      return;
+    }
+
+    // 3. Cek panjang username
+    if (username.length < 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Username minimal 3 karakter')),
+      );
+      return;
+    }
+
+    // 4. Cek panjang password (misalnya minimal 6 karakter)
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password minimal 6 karakter')),
+      );
+      return;
+    }
+
     final error = await UserService.register(
-      email: emailController.text,
-      username: usernameController.text,
-      password: passwordController.text,
+      email: email,
+      username: username,
+      password: password,
     );
     if (!mounted) return;
 
@@ -38,10 +74,10 @@ class _RegisterPageState extends State<RegisterPage> {
           .showSnackBar(SnackBar(content: Text(error)));
       return;
     }
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Berhasil daftar, silakan login')),
     );
-    // sukses: balik ke halaman login
     Navigator.pop(context);
   }
 
