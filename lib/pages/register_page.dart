@@ -39,7 +39,7 @@ class _RegisterPageState extends State<RegisterPage> {
         'All fields are required',
         snackPosition: SnackPosition.BOTTOM,
         colorText: AppColors.textPrimary,                     
-        icon: const Icon(Icons.warning, color: AppColors.accent), 
+        icon:  Icon(Icons.warning, color: AppColors.accent), 
         margin: const EdgeInsets.all(16),            
         borderRadius: 16,                           
         duration: const Duration(seconds: 2),   
@@ -54,7 +54,7 @@ class _RegisterPageState extends State<RegisterPage> {
         'Invalid email format',
         snackPosition: SnackPosition.BOTTOM,
         colorText: AppColors.textPrimary,                     
-        icon: const Icon(Icons.warning, color: AppColors.accent), 
+        icon:  Icon(Icons.warning, color: AppColors.accent), 
         margin: const EdgeInsets.all(16),            
         borderRadius: 16,                           
         duration: const Duration(seconds: 2),   
@@ -69,7 +69,7 @@ class _RegisterPageState extends State<RegisterPage> {
         'Username must be at least 3 characters',
         snackPosition: SnackPosition.BOTTOM,
         colorText: AppColors.textPrimary,                     
-        icon: const Icon(Icons.warning, color: AppColors.accent), 
+        icon:  Icon(Icons.warning, color: AppColors.accent), 
         margin: const EdgeInsets.all(16),            
         borderRadius: 16,                           
         duration: const Duration(seconds: 2),   
@@ -84,7 +84,7 @@ class _RegisterPageState extends State<RegisterPage> {
         'Password must be at least 6 characters',
         snackPosition: SnackPosition.BOTTOM,
         colorText: AppColors.textPrimary,                     
-        icon: const Icon(Icons.warning, color: AppColors.accent), 
+        icon:  Icon(Icons.warning, color: AppColors.accent), 
         margin: const EdgeInsets.all(16),            
         borderRadius: 16,                           
         duration: const Duration(seconds: 2),   
@@ -152,7 +152,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+               Text(
                 '“Get Started by Creating Your Account”',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -181,7 +181,7 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text(
+                child:  Text(
                   'Sudah punya akun? Login',
                   style: TextStyle(
                     color: AppColors.secondary,

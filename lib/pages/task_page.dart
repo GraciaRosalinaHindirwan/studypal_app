@@ -65,11 +65,11 @@ class _TaskPageState extends State<TaskPage> {
                 Container(
                   width: 64,
                   height: 64,
-                  decoration: const BoxDecoration(
+                  decoration:  BoxDecoration(
                     color: AppColors.accent,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child:  Icon(
                     Icons.delete_outline,
                     color: AppColors.primary,
                     size: 32,
@@ -223,14 +223,14 @@ class _TaskPageState extends State<TaskPage> {
           return ListTile(
             title: Text(
               label,
-              style: const TextStyle(
+              style:  TextStyle(
                 color: AppColors.primary,
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.w600,
               ),
             ),
             trailing: statusFilter == value
-                ? const Icon(Icons.check, color: AppColors.primary)
+                ?  Icon(Icons.check, color: AppColors.primary)
                 : null,
             onTap: () {
               setState(() => statusFilter = value);
@@ -381,7 +381,7 @@ class _TaskPageState extends State<TaskPage> {
             ListView(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 96),
               children: [
-                const Text(
+                 Text(
                   '“Stay on Track with Your Tasks”',
                   style: TextStyle(
                     color: AppColors.primary,
@@ -450,7 +450,7 @@ class _TaskPageState extends State<TaskPage> {
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.primary, width: 3),
                   ),
-                  child: const Icon(Icons.add, color: AppColors.primary, size: 28),
+                  child:  Icon(Icons.add, color: AppColors.primary, size: 28),
                 ),
               ),
             ),

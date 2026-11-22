@@ -4,17 +4,11 @@ import 'package:studypal/theme/app_colors.dart';
 class AppButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
-  final Color background;
-  final Color foreground;
-  final Color border;
 
   const AppButton({
     super.key,
     required this.label,
     required this.onTap,
-    this.background = AppColors.primary,
-    this.foreground = AppColors.accent,
-    this.border = AppColors.accent,
   });
 
   @override
@@ -26,14 +20,14 @@ class AppButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: background,
+          color: AppColors.primary,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: border, width: 1.5),
+          border: Border.all(color: AppColors.border, width: 1.5),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: foreground,
+            color: AppColors.accent,
             fontSize: 20,
             fontFamily: 'Poppins',
             fontWeight: FontWeight.w600,

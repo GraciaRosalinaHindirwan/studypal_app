@@ -25,7 +25,7 @@ class AppTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
-      borderSide: const BorderSide(color: AppColors.secondary, width: 3),
+      borderSide:  BorderSide(color: AppColors.secondary, width: 3),
     );
 
     return TextField(
@@ -35,7 +35,7 @@ class AppTextField extends StatelessWidget {
       obscureText: obscureText,
       keyboardType: keyboardType,
       onChanged: onChanged,
-      style: const TextStyle(
+      style:  TextStyle(
         color: AppColors.primary,
         fontSize: 16,
         fontFamily: 'Poppins',
@@ -43,7 +43,7 @@ class AppTextField extends StatelessWidget {
       ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(
+        hintStyle:  TextStyle(
           color: AppColors.accent,
           fontSize: 16,
           fontFamily: 'Poppins',

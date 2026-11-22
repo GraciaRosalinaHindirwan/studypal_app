@@ -104,7 +104,7 @@ class _CustomReminderSheetState
                     onPressed: () {
                       Navigator.pop(context, '__RESET__');
                     },
-                    icon: const Icon(
+                    icon:  Icon(
                       Icons.refresh,
                       color: AppColors.accent,
                       size: 24,
@@ -215,9 +215,6 @@ class _CustomReminderSheetState
                         '$selectedValue $selectedUnit sebelum',
                       );
                     }, 
-                    background: AppColors.primary,
-                    foreground: AppColors.accent,
-                    border: AppColors.primary,
                   ), 
                 ),
 

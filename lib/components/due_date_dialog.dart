@@ -46,7 +46,7 @@ class _DueDateDialogState extends State<DueDateDialog> {
         value: value,
         underline: const SizedBox(), // hilangin garis bawaan dropdown
         menuMaxHeight: 240, // biar list menit ga kepanjangan
-        style: const TextStyle(
+        style:  TextStyle(
           color: AppColors.primary,
           fontSize: 16,
           fontFamily: 'Poppins',
@@ -75,7 +75,7 @@ class _DueDateDialogState extends State<DueDateDialog> {
       backgroundColor: AppColors.background,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: const BorderSide(color: AppColors.accent, width: 3),
+        side:  BorderSide(color: AppColors.accent, width: 3),
       ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -100,7 +100,7 @@ class _DueDateDialogState extends State<DueDateDialog> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 spacing: 8,
                 children: [
-                  const Text(
+                   Text(
                     'Jam',
                     style: TextStyle(
                       color: AppColors.primary,
@@ -114,7 +114,7 @@ class _DueDateDialogState extends State<DueDateDialog> {
                     // pakai setState biar dropdown nampilin angka yang baru
                     onChanged: (v) => setState(() => hour = v),
                   ),
-                  const Text(
+                   Text(
                     ':',
                     style: TextStyle(
                       color: AppColors.primary,
@@ -127,7 +127,7 @@ class _DueDateDialogState extends State<DueDateDialog> {
                     count: 60,
                     onChanged: (v) => setState(() => minute = v),
                   ),
-                  const Text(
+                   Text(
                     'Menit',
                     style: TextStyle(
                       color: AppColors.primary,

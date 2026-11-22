@@ -38,7 +38,7 @@ class TaskCard extends StatelessWidget {
           ),
           Text(
             dateTime,
-            style: const TextStyle(
+            style:  TextStyle(
               color: AppColors.accent,
               fontSize: 16,
               fontFamily: 'Poppins',
@@ -54,7 +54,7 @@ class TaskCard extends StatelessWidget {
             ),
             child: Text(
               isDone ? 'DONE' : 'TO DO',
-              style: const TextStyle(
+              style:  TextStyle(
                 color: AppColors.primary,
                 fontSize: 16,
                 fontFamily: 'Poppins',

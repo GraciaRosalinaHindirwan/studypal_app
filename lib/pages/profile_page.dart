@@ -185,7 +185,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Obx((){
       return Scaffold(
-        backgroundColor: themeController.currentBackground,
+        backgroundColor: AppColors.background,
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -219,7 +219,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ? null
                             : Text(
                                 user.username[0].toUpperCase(),
-                                style: const TextStyle(
+                                style:  TextStyle(
                                   color: AppColors.primary,
                                   fontSize: 48,
                                   fontFamily: 'Poppins',
@@ -235,7 +235,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Container(
                             width: 50,
                             height: 50,
-                            decoration: const BoxDecoration(
+                            decoration:  BoxDecoration(
                               color: AppColors.primary,
                               shape: BoxShape.circle,
                             ),
@@ -302,12 +302,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   decoration: BoxDecoration(
                     // Jika gelap pakai warna kartu gelap, jika terang pakai putih transparan
                     color: themeController.isDarkMode.value 
-                        ? AppColors.darkSecondary 
+                        ? AppColors.secondary 
                         : Colors.white.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: themeController.isDarkMode.value 
-                          ? AppColors.darkBorder 
+                          ? AppColors.border 
                           : AppColors.secondary, 
                       width: 2,
                     ),
@@ -335,7 +335,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       Switch(
                         value: themeController.isDarkMode.value,
-                        activeColor: AppColors.darkPrimary,
+                        activeColor: AppColors.primary,
                         onChanged: (val) {
                           themeController.toggleTheme();
                         },

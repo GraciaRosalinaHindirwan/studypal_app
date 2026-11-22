@@ -92,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+               Text(
                 'Today is a fresh start. Ready to be productive?',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -120,7 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                     MaterialPageRoute(builder: (_) => const RegisterPage()),
                   );
                 },
-                child: const Text(
+                child:  Text(
                   'Belum punya akun? Register',
                   style: TextStyle(
                     color: AppColors.secondary,

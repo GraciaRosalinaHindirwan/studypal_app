@@ -22,7 +22,7 @@ class HeaderSub extends StatelessWidget {
         children: [
           IconButton(
             onPressed: onBack ?? () => Navigator.pop(context),
-            icon: const Icon(
+            icon:  Icon(
               Icons.arrow_back_ios_new,
               color: AppColors.primary,
               size: 24,
