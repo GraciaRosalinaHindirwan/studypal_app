@@ -1,116 +1,60 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:get/get.dart';
 
 import 'package:studypal/components/digitalClock/digital_clock.dart';
 import 'package:studypal/components/summary_task_card.dart';
 import 'package:studypal/components/today_pick_card.dart';
 import 'package:studypal/components/today_plan_progress.dart';
-import 'package:studypal/models/task.dart';
-import 'package:studypal/pages/add_task_page.dart';
-import 'package:studypal/services/task_service.dart';
+import 'package:studypal/controller/task_controller.dart';
+import 'package:studypal/controller/theme_controller.dart';
+import 'package:studypal/routes/app_routes.dart';
 import 'package:studypal/theme/app_colors.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  //Helper kecil untuk mengecek apakah suatu tanggal berada di "hari ini"
-  bool _isToday(DateTime? date){
-    if(date == null) return false; 
-    final now = DateTime.now(); 
-    return date.year == now.year &&
-    date.month == now.month && 
-    date.day == now.day; 
-  }
+  const HomePage({super.key}); 
 
   @override
   Widget build(BuildContext context) {
-    //1. ambil box tasks 
-    final taskBox = Hive.box<Task>('tasks'); 
+    final TaskController controller = Get.put(TaskController()); 
+    // Panggil ThemeController di sini juga:
+    final ThemeController themeController = Get.find<ThemeController>(); 
 
-    //2. isntance taskService 
-    final taskService = TaskService(taskBox);
+    return Obx(() {
+      // Pantau status tema secara eksplisit:
+      final isDark = themeController.isDarkMode.value;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: ValueListenableBuilder(
-        valueListenable: taskBox.listenable(), 
-        builder: (context, box, child) {
-          //ambil semua task lalu saring berdasarkan tanggal hari ini 
-          final allTasks = taskService.getTasks();
-          final todayTasks = allTasks.where((Task) => _isToday(Task.dueDate)).toList(); 
-
-          final totalToday = todayTasks.length;  //berapa banyak tugas hari ini 
-          // udh berapa yang selesai 
-          final completeToday = todayTasks.where((Task) => Task.isCompleted == true).length; 
-          final todoToday = todayTasks.where((Task) => Task.isCompleted != true).length; 
-
-          final int percentage = totalToday == 0
-            ? 0
-            : ((completeToday / totalToday) * 100).round().clamp(0, 100); 
-
-          final String progressMessage = totalToday == 0
-            ? "No Tasks Schedule for today yet"
-            : percentage == 100
-                ? "Awesome! All today's tasks are done"
-                : "Great, your today's plan is almost done";
-
-          //ambil 5 task untuk today's pick 
-          final sortedTodayTask = List<Task>.from(todayTasks)
-          ..sort((a, b) {
-            if(a.dueDate == null && b.dueDate == null) return 0; 
-            if(a.dueDate == null) return 1; //task tanpa due date taruh bawah
-            if(b.dueDate == null) return -1; 
-            return a.dueDate!.compareTo(b.dueDate!); //yang lebih awal taro atas
-          });
-
-          final List<Task> todayPickTasks = sortedTodayTask.take(5).toList();
-
-          return SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsetsGeometry.symmetric(horizontal: 24), 
-            
-              child: Column(
-                children: [
-                  DigitalClock(),
-            
-                  const SizedBox(height: 24,), 
-            
-                  TodayPlanProgress(
-                    message: progressMessage,
-                    percentage: percentage,
-                  ), 
-            
-                  const SizedBox(height: 24,), 
-            
-                  SummaryTaskCard(
-                    firstCount: completeToday, 
-                    secondCount: todoToday, 
-                    onAddTask: (){
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AddTaskPage(),
-                        ),
-                      );
-                    }
-                  ), 
-            
-                  const SizedBox(height: 24,), 
-                  
-                  TodayPickCard(
-                    tasks: todayPickTasks,
-                    onToggleTask: (task) {
-                      task.isCompleted =!task.isCompleted; 
-                      taskService.updateTask(task); 
-                    }
-                  ), 
-                ],
-              ),
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              children: [
+                const DigitalClock(),
+                const SizedBox(height: 24), 
+                TodayPlanProgress(
+                  message: controller.progressMessage,
+                  percentage: controller.percentage,
+                ), 
+                const SizedBox(height: 24), 
+                SummaryTaskCard(
+                  firstCount: controller.completeToday, 
+                  secondCount: controller.todoToday, 
+                  onAddTask: () => Get.toNamed(AppRoutes.addTask),
+                ), 
+                const SizedBox(height: 24), 
+                TodayPickCard(
+                  tasks: controller.todayTasks,
+                  onToggleTask: (task) {
+                    task.isCompleted = !task.isCompleted;
+                    controller.updateTask(task); 
+                  },
+                ), 
+              ],
             ),
-          );
-        }
-      ), 
-    );
+          ),
+        ),
+      );
+    }); 
   }
 }

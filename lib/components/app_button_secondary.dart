@@ -29,7 +29,7 @@ class AppButtonSecondary extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: const TextStyle(
+          style:  TextStyle(
             color: AppColors.primary,
             fontSize: 20,
             fontFamily: 'Poppins',

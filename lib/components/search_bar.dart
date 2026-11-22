@@ -60,7 +60,7 @@ class SearchBar extends StatelessWidget {
             color: AppColors.primary,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Icon(
+          child:  Icon(
             Icons.search,
             color: AppColors.background,
             size: 24,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:get/get.dart';
+import 'package:studypal/controller/task_controller.dart';
 import 'package:studypal/services/notification_service.dart';
-import 'package:studypal/services/task_service.dart';
 
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_button_secondary.dart';
@@ -59,14 +59,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
   }
 
   Future<void> pickLocation() async {
-    final result = await Navigator.push<Location>(
-    context,
-    MaterialPageRoute(
-      builder: (_) => PickLocationPage(
-        initialLocation: selectedLocation,
-      ),
-    ),
+    final result = await Get.to<Location>(
+    () => PickLocationPage(initialLocation: selectedLocation),
   );
+
 
     if (!mounted || result == null) return;
 
@@ -82,11 +78,18 @@ class _AddTaskPageState extends State<AddTaskPage> {
     final reminderMin = _parseReminderToMinutes(selectedReminder);
     
     //validasi title 
-    if(title.isEmpty){
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Title tidak boleh kosong"))
+    if (title.isEmpty) {
+      Get.snackbar(
+        'Warning',
+        'Title cannot be empty!',
+        snackPosition: SnackPosition.BOTTOM,
+        colorText: AppColors.textPrimary,                     
+        icon:  Icon(Icons.warning, color: AppColors.accent), 
+        margin: const EdgeInsets.all(16),            
+        borderRadius: 16,                           
+        duration: const Duration(seconds: 2),   
       );
-      return; 
+      return;
     }
 
     try {
@@ -127,21 +130,24 @@ class _AddTaskPageState extends State<AddTaskPage> {
         createdAt: task.createdAt,
       );
 
-      //menghubungkan dengan Hive
-      final taskBox = Hive.box<Task>('tasks'); 
-      final taskService = TaskService(taskBox); 
+      // 1. Panggil controller yang sudah ada
+      final TaskController controller = Get.find<TaskController>();
 
-      //simpan task 
-      await taskService.addTask(task); 
-
-      if (!mounted) return; 
-
-      //menampilkan pesan berhasil 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Task berhasil ditambahkan!"))
+      // 2. Simpan task lewat controller
+      await controller.addTask(taskToSave);
+      
+      // 3. Tampilkan pesan & kembali ke halaman sebelumnya
+      Get.back();
+       Get.snackbar(
+        'Success',
+        'Task added successfully!',
+        snackPosition: SnackPosition.BOTTOM,
+        colorText: AppColors.textPrimary,                     
+        icon:  Icon(Icons.check_circle, color: AppColors.textSecondary), 
+        margin: const EdgeInsets.all(16),            
+        borderRadius: 16,                           
+        duration: const Duration(seconds: 2),   
       );
-
-      Navigator.pop(context, true);
       
     } catch (e) {
       if (!mounted) return;
@@ -225,13 +231,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     label: selectedReminder ?? 'Reminder',
                     icon: Icons.notifications_none,
                     onTap: () async {
-                      final result = await Navigator.push<String>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => NotificationPage(
-                            dueDate: dueDate,
-                            initialReminder: selectedReminder,
-                          ),
+                      final result = await Get.to<String>(
+                        () => NotificationPage(
+                          dueDate: dueDate,
+                          initialReminder: selectedReminder,
                         ),
                       );
 
@@ -259,7 +262,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 Expanded(
                   child: AppButtonSecondary(
                     label: 'Cancel Task',
-                    onTap: () => Navigator.pop(context),
+                    onTap: () =>  Get.back(),
                   ),
                 ),
                 Expanded(

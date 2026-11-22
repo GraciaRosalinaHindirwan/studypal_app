@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:get/get.dart';
+import 'package:studypal/controller/task_controller.dart';
 import 'package:studypal/models/task.dart';
 import 'package:studypal/models/location.dart';
 import 'package:studypal/pages/pick_location_page.dart';
 import 'package:studypal/services/notification_service.dart';
-import 'package:studypal/services/task_service.dart';
 
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_button_secondary.dart';
@@ -92,10 +92,15 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
 
     // 2. Validasi title
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Title tidak boleh kosong'),
-        ),
+      Get.snackbar(
+        'Warning',
+        'Title cannot be empty!',
+        snackPosition: SnackPosition.BOTTOM,
+        colorText: AppColors.textPrimary,                     
+        icon: Icon(Icons.warning, color: AppColors.accent), 
+        margin: const EdgeInsets.all(16),            
+        borderRadius: 16,                           
+        duration: const Duration(seconds: 2),   
       );
       return;
     }
@@ -140,26 +145,24 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
         createdAt: draftTask.createdAt,
       );
       
-      // 4. Akses Hive Box
-      final taskBox = Hive.box<Task>('tasks');
+      // Panggil controller
+      final TaskController controller = Get.find<TaskController>();
 
-      // 5. Buat TaskService
-      final taskService = TaskService(taskBox);
-
-      // 6. Simpan perubahan ke Hive
-      await taskService.updateTask(updatedTask);
-
-      if (!mounted) return;
-
-      // 7. Beri informasi berhasil
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Task berhasil diperbarui!'),
-        ),
+      // Update lewat controller
+      await controller.updateTask(updatedTask);
+      
+      // Kembali dan beri notifikasi
+      Get.back();
+      Get.snackbar(
+        'Success',
+        'Task update successfully!',
+        snackPosition: SnackPosition.BOTTOM,
+        colorText: AppColors.textPrimary,                     
+        icon: Icon(Icons.check_circle, color: AppColors.textSecondary), 
+        margin: const EdgeInsets.all(16),            
+        borderRadius: 16,                           
+        duration: const Duration(seconds: 2),   
       );
-
-      // 8. Kembali ke halaman sebelumnya
-      Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
 

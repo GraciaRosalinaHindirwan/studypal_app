@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:studypal/components/header_main.dart';
 import 'package:studypal/components/buttom_navigator_bar.dart';
 import 'package:studypal/models/user_model.dart';
@@ -21,11 +22,6 @@ class MainAppLayout extends StatefulWidget {
 class _MainAppLayoutState extends State<MainAppLayout> {
   int selectedIndex = 0;
   UserModel? user;
-
-  final List<Widget> pages = const [
-    HomePage(),
-    TaskPage(),
-  ];
 
   @override
   void initState() {
@@ -56,35 +52,39 @@ class _MainAppLayoutState extends State<MainAppLayout> {
         ? user!.username[0].toUpperCase()
         : '?';
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 16,
+    final List<Widget> pages = [
+    HomePage(),
+    TaskPage(),
+  ];
+
+    return Obx(() {
+      return Scaffold(
+        backgroundColor: AppColors.background, // Ini otomatis jadi hitam kebiruan!
+        body: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: HeaderMain(
+                  userInitial: initial,
+                  photoBytes: user?.photoBytes,
+                  onAvatarTap: _openProfile,
+                ),
               ),
-              child: HeaderMain(
-                userInitial: initial,
-                photoBytes: user?.photoBytes,
-                onAvatarTap: _openProfile,
+              Expanded(
+                child: IndexedStack(index: selectedIndex, children: pages),
               ),
-            ),
-            Expanded(
-              child: IndexedStack(index: selectedIndex, children: pages),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: ButtomNavigatorBar(
-          selectedIndex: selectedIndex,
-          onItemSelected: (index) => setState(() => selectedIndex = index),
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: ButtomNavigatorBar(
+            selectedIndex: selectedIndex,
+            onItemSelected: (index) => setState(() => selectedIndex = index),
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }

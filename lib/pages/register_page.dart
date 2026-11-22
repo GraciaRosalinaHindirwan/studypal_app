@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_text_field.dart';
 import 'package:studypal/pages/login_page.dart';
@@ -33,32 +34,60 @@ class _RegisterPageState extends State<RegisterPage> {
 
     // 1. Cek kolom kosong
     if (email.isEmpty || username.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Semua kolom wajib diisi')),
+      Get.snackbar(
+        'Warning',
+        'All fields are required',
+        snackPosition: SnackPosition.BOTTOM,
+        colorText: AppColors.textPrimary,                     
+        icon:  Icon(Icons.warning, color: AppColors.accent), 
+        margin: const EdgeInsets.all(16),            
+        borderRadius: 16,                           
+        duration: const Duration(seconds: 2),   
       );
       return;
     }
 
     // 2. Cek format email sederhana
     if (!email.contains('@') || !email.contains('.')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Format email tidak valid')),
+      Get.snackbar(
+        'Warning',
+        'Invalid email format',
+        snackPosition: SnackPosition.BOTTOM,
+        colorText: AppColors.textPrimary,                     
+        icon:  Icon(Icons.warning, color: AppColors.accent), 
+        margin: const EdgeInsets.all(16),            
+        borderRadius: 16,                           
+        duration: const Duration(seconds: 2),   
       );
       return;
     }
 
     // 3. Cek panjang username
     if (username.length < 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Username minimal 3 karakter')),
+      Get.snackbar(
+        'Warning',
+        'Username must be at least 3 characters',
+        snackPosition: SnackPosition.BOTTOM,
+        colorText: AppColors.textPrimary,                     
+        icon:  Icon(Icons.warning, color: AppColors.accent), 
+        margin: const EdgeInsets.all(16),            
+        borderRadius: 16,                           
+        duration: const Duration(seconds: 2),   
       );
       return;
     }
 
     // 4. Cek panjang password (misalnya minimal 6 karakter)
     if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password minimal 6 karakter')),
+      Get.snackbar(
+        'Warning',
+        'Password must be at least 6 characters',
+        snackPosition: SnackPosition.BOTTOM,
+        colorText: AppColors.textPrimary,                     
+        icon:  Icon(Icons.warning, color: AppColors.accent), 
+        margin: const EdgeInsets.all(16),            
+        borderRadius: 16,                           
+        duration: const Duration(seconds: 2),   
       );
       return;
     }
@@ -123,7 +152,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+               Text(
                 '“Get Started by Creating Your Account”',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -152,7 +181,7 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text(
+                child:  Text(
                   'Sudah punya akun? Login',
                   style: TextStyle(
                     color: AppColors.secondary,
