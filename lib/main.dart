@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:studypal/models/task.dart';
 import 'package:studypal/pages/home_page.dart';
 import 'package:studypal/pages/login_page.dart';
 import 'package:studypal/services/notification_service.dart';
 import 'package:studypal/models/user_model.dart';
-
 Future<void> main() async {
   // memastikan flutter siap 
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,8 +32,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: HomePage(),
+    return GetMaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: LoginPage(),
     );
   }
 }
