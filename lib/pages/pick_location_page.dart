@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
 
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/header_sub.dart';
@@ -59,12 +60,55 @@ class _PickLocationPageState extends State<PickLocationPage> {
 
     // Mempertahankan lokasi yang sebelumnya dipilih
     selectedLocation = widget.initialLocation;
+
+    // Kalau belum ada lokasi awal yang dikirim, ambil posisi GPS asli pengguna
+    if (widget.initialLocation == null) {
+      _loadCurrentLocation();
+    }
   }
 
   @override
   void dispose() {
     searchController.dispose();
     super.dispose();
+  }
+
+  // Fungsi mengambil posisi GPS asli pengguna
+  Future<void> _loadCurrentLocation() async {
+    try {
+      // 1. Cek apakah GPS/Location di HP nyala
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
+
+      // 2. Cek & minta izin lokasi ke pengguna
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return;
+      }
+      if (permission == LocationPermission.deniedForever) return;
+
+      // 3. Ambil koordinat GPS saat ini
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
+      if (!mounted) return;
+
+      final currentPoint = LatLng(position.latitude, position.longitude);
+
+      setState(() {
+        selectedPoint = currentPoint;
+        selectedLocation = null;
+      });
+
+      // Geser peta ke posisi GPS pengguna
+      mapController.move(currentPoint, 16);
+    } catch (e) {
+      debugPrint('Gagal mengambil lokasi GPS: $e');
+    }
   }
 
   // Fungsi mencari lokasi
