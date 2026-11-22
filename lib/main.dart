@@ -5,6 +5,7 @@ import 'package:studypal/models/task.dart';
 import 'package:studypal/pages/home_page.dart';
 import 'package:studypal/pages/login_page.dart';
 import 'package:studypal/services/notification_service.dart';
+import 'package:studypal/models/user_model.dart';
 
 Future<void> main() async {
   // memastikan flutter siap 
@@ -15,9 +16,11 @@ Future<void> main() async {
 
   //registrasi adapter
   Hive.registerAdapter(TaskAdapter());
+  Hive.registerAdapter(UserModelAdapter());
 
   //membuka box 
   await Hive.openBox<Task>('tasks');
+  await Hive.openBox<UserModel>('users');
 
   await NotificationService.instance.init();
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_text_field.dart';
+import 'package:studypal/pages/login_page.dart';
 import 'package:studypal/services/user_service.dart';
 import 'package:studypal/theme/app_colors.dart';
 import 'package:studypal/theme/app_text_style.dart';
@@ -62,23 +63,37 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    final error = await UserService.register(
-      email: email,
-      username: username,
-      password: password,
-    );
-    if (!mounted) return;
+    try {
+      final error = await UserService.register(
+        email: email,
+        username: username,
+        password: password,
+      );
+      if (!mounted) return;
 
-    if (error != null) {
+      if (error != null) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error)));
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Berhasil daftar, silakan login')),
+      );
+
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginPage()),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error)));
-      return;
+          .showSnackBar(SnackBar(content: Text('Gagal register: $e')));
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Berhasil daftar, silakan login')),
-    );
-    Navigator.pop(context);
   }
 
   @override
