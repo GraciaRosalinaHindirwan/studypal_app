@@ -1,68 +1,122 @@
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
+import 'dart:typed_data';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studypal/models/user_model.dart';
 
 class UserService {
-  static const String _userIdKey = 'logged_in_user_id';
+  static Box<UserModel> get _box => Hive.box<UserModel>('users');
 
-  static late Box _users;
-  static late Box _session;
-
-  // dipanggil sekali di main() sebelum runApp
-  static Future<void> init() async {
-    _users = await Hive.openBox('users');
-    _session = await Hive.openBox('session');
-  }
-
-  // password ga disimpan polos, di-hash dulu
-  static String hash(String password) =>
-      sha256.convert(utf8.encode(password)).toString();
-
-  static UserModel? _find(bool Function(UserModel) test) {
-    for (final data in _users.values) {
-      final user = UserModel.fromMap(Map.from(data));
-      if (test(user)) return user;
+  // loop pakai getAt, sama kayak itemBuilder di modul
+  static int _indexWhere(bool Function(UserModel) test) {
+    for (var i = 0; i < _box.length; i++) {
+      final user = _box.getAt(i);
+      if (user != null && test(user)) return i;
     }
-    return null;
+    return -1;
   }
 
-  static UserModel? findById(int id) {
-    final data = _users.get(id);
-    return data == null ? null : UserModel.fromMap(Map.from(data));
+  static UserModel? getByIndex(int index) {
+    if (index < 0 || index >= _box.length) return null;
+    return _box.getAt(index);
   }
 
-  static UserModel? findByEmail(String email) =>
-      _find((u) => u.email == email);
-
-  static UserModel? findByUsername(String username) =>
-      _find((u) => u.username == username);
-
-  static Future<UserModel> create({
+  // CREATE: return null kalau sukses, atau pesan error
+  static Future<String?> register({
     required String email,
     required String username,
     required String password,
   }) async {
-    // add() ngasih id auto-increment, id-nya disimpan lagi di dalam datanya
-    final id = await _users.add({});
-    final user = UserModel(
-      id: id,
-      email: email,
-      username: username,
-      passwordHash: hash(password),
-    );
-    await _users.put(id, user.toMap());
-    return user;
+    final e = email.trim();
+    final u = username.trim();
+    if (e.isEmpty || u.isEmpty || password.isEmpty) {
+      return 'Semua field wajib diisi';
+    }
+    if (_indexWhere((x) => x.email == e) != -1) return 'Email sudah terdaftar';
+    if (_indexWhere((x) => x.username == u) != -1) {
+      return 'Username sudah dipakai';
+    }
+
+    await _box.add(UserModel(email: e, username: u, password: password));
+    return null;
   }
 
-  static Future<void> update(UserModel user) =>
-      _users.put(user.id, user.toMap());
+  // return index user kalau cocok, null kalau salah
+  static int? login(String username, String password) {
+    final index = _indexWhere(
+      (x) => x.username == username.trim() && x.password == password,
+    );
+    return index == -1 ? null : index;
+  }
 
-  // session: cuma nyimpen id user yang lagi login
-  static Future<void> saveSession(int userId) =>
-      _session.put(_userIdKey, userId);
+  // UPDATE: bikin UserModel baru lalu putAt, kayak edit todo di modul
+  static Future<String?> updateProfile(
+    int index, {
+    required String email,
+    required String username,
+    required String password,
+    required String confirm,
+  }) async {
+    final user = _box.getAt(index)!;
+    final e = email.trim();
+    final u = username.trim();
+    if (e.isEmpty || u.isEmpty) return 'Email dan username tidak boleh kosong';
 
-  static int? getSessionUserId() => _session.get(_userIdKey) as int?;
+    final emailIdx = _indexWhere((x) => x.email == e);
+    if (emailIdx != -1 && emailIdx != index) return 'Email sudah terdaftar';
+    final nameIdx = _indexWhere((x) => x.username == u);
+    if (nameIdx != -1 && nameIdx != index) return 'Username sudah dipakai';
 
-  static Future<void> clearSession() => _session.delete(_userIdKey);
+    var newPassword = user.password;
+    // password cuma diganti kalau diisi
+    if (password.isNotEmpty) {
+      if (password != confirm) return 'Konfirmasi password tidak sama';
+      newPassword = password;
+    }
+
+    await _box.putAt(
+      index,
+      UserModel(
+        email: e,
+        username: u,
+        password: newPassword,
+        photoBytes: user.photoBytes,
+      ),
+    );
+    return null;
+  }
+
+  static Future<void> updatePhoto(int index, Uint8List bytes) async {
+    final user = _box.getAt(index)!;
+    await _box.putAt(
+      index,
+      UserModel(
+        email: user.email,
+        username: user.username,
+        password: user.password,
+        photoBytes: bytes,
+      ),
+    );
+  }
+
+  // SHARED PREFERENCES
+  static Future<void> saveSession(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('loginData', true);
+    await prefs.setInt('userIndex', index);
+  }
+
+  static Future<int?> getSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final adaLogin = prefs.getBool('loginData') ?? false;
+    if (!adaLogin) return null;
+    final index = prefs.getInt('userIndex');
+    if (index == null || getByIndex(index) == null) return null;
+    return index;
+  }
+
+  static Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('loginData', false);
+    await prefs.remove('userIndex');
+  }
 }

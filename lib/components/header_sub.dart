@@ -21,7 +21,7 @@ class HeaderSub extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           IconButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: onBack ?? () => Navigator.pop(context),
             icon: const Icon(
               Icons.arrow_back_ios_new,
               color: AppColors.primary,

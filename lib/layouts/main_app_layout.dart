@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:studypal/components/header_main.dart';
 import 'package:studypal/components/buttom_navigator_bar.dart';
+import 'package:studypal/models/user_model.dart';
 import 'package:studypal/pages/home_page.dart';
 import 'package:studypal/pages/profile_page.dart';
 import 'package:studypal/pages/task_page.dart';
-import 'package:studypal/providers/auth_provider.dart';
+import 'package:studypal/services/user_service.dart';
 import 'package:studypal/theme/app_colors.dart';
 
 class MainAppLayout extends StatefulWidget {
-  const MainAppLayout({super.key});
+  // data dari login dikirim lewat constructor
+  final int userIndex;
+
+  const MainAppLayout({super.key, required this.userIndex});
 
   @override
   State<MainAppLayout> createState() => _MainAppLayoutState();
@@ -17,6 +20,7 @@ class MainAppLayout extends StatefulWidget {
 
 class _MainAppLayoutState extends State<MainAppLayout> {
   int selectedIndex = 0;
+  late UserModel user;
 
   final List<Widget> pages = [
     const HomePage(),
@@ -24,13 +28,25 @@ class _MainAppLayoutState extends State<MainAppLayout> {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    // watch: inisial ikut berubah kalau username diganti di profil
-    final user = context.watch<AuthProvider>().currentUser;
-    final initial = (user != null && user.username.isNotEmpty)
-        ? user.username[0].toUpperCase()
-        : '?';
+  void initState() {
+    super.initState();
+    user = UserService.getByIndex(widget.userIndex)!;
+  }
 
+  Future<void> _openProfile() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProfilePage(userIndex: widget.userIndex),
+      ),
+    );
+    // pas balik dari profil, ambil data terbaru biar header ikut berubah
+    final updated = UserService.getByIndex(widget.userIndex);
+    if (mounted && updated != null) setState(() => user = updated);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -42,32 +58,20 @@ class _MainAppLayoutState extends State<MainAppLayout> {
                 vertical: 16,
               ),
               child: HeaderMain(
-                userInitial: initial,
-                photoBytes: user?.photoBytes,
-                onAvatarTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ProfilePage()),
-                  );
-                },
+                userInitial: user.username[0].toUpperCase(),
+                photoBytes: user.photoBytes,
+                onAvatarTap: _openProfile,
               ),
             ),
             Expanded(
-              child: IndexedStack(
-                index: selectedIndex,
-                children: pages,
-              ),
+              child: IndexedStack(index: selectedIndex, children: pages),
             ),
           ],
         ),
       ),
       bottomNavigationBar: ButtomNavigatorBar(
         selectedIndex: selectedIndex,
-        onItemSelected: (index) {
-          setState(() {
-            selectedIndex = index;
-          });
-        },
+        onItemSelected: (index) => setState(() => selectedIndex = index),
       ),
     );
   }

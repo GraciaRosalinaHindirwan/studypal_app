@@ -1,48 +1,23 @@
 import 'dart:typed_data';
+import 'package:hive/hive.dart';
 
-class UserModel {
-  final int id;
+part 'user_model.g.dart';
+
+@HiveType(typeId: 0)
+class UserModel extends HiveObject {
+  @HiveField(0)
   final String email;
+  @HiveField(1)
   final String username;
-  final String passwordHash;
+  @HiveField(2)
+  final String password;
+  @HiveField(3)
   final Uint8List? photoBytes;
 
-  const UserModel({
-    required this.id,
+  UserModel({
     required this.email,
     required this.username,
-    required this.passwordHash,
+    required this.password,
     this.photoBytes,
   });
-
-  Map<String, dynamic> toMap() => {
-        'id': id,
-        'email': email,
-        'username': username,
-        'passwordHash': passwordHash,
-        'photoBytes': photoBytes,
-      };
-
-  factory UserModel.fromMap(Map map) => UserModel(
-        id: map['id'] as int,
-        email: map['email'] as String,
-        username: map['username'] as String,
-        passwordHash: map['passwordHash'] as String,
-        photoBytes: map['photoBytes'] as Uint8List?,
-      );
-
-  UserModel copyWith({
-    String? email,
-    String? username,
-    String? passwordHash,
-    Uint8List? photoBytes,
-  }) {
-    return UserModel(
-      id: id,
-      email: email ?? this.email,
-      username: username ?? this.username,
-      passwordHash: passwordHash ?? this.passwordHash,
-      photoBytes: photoBytes ?? this.photoBytes,
-    );
-  }
 }
