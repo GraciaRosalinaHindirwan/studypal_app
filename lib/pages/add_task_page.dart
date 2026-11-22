@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:studypal/controller/task_controller.dart';
 import 'package:studypal/services/notification_service.dart';
-import 'package:studypal/services/task_service.dart';
 
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_button_secondary.dart';
@@ -61,14 +59,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
   }
 
   Future<void> pickLocation() async {
-    final result = await Navigator.push<Location>(
-    context,
-    MaterialPageRoute(
-      builder: (_) => PickLocationPage(
-        initialLocation: selectedLocation,
-      ),
-    ),
+    final result = await Get.to<Location>(
+    () => PickLocationPage(initialLocation: selectedLocation),
   );
+
 
     if (!mounted || result == null) return;
 

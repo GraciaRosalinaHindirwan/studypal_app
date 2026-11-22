@@ -8,6 +8,7 @@ import 'package:studypal/components/today_plan_progress.dart';
 import 'package:studypal/controller/task_controller.dart';
 import 'package:studypal/controller/theme_controller.dart';
 import 'package:studypal/pages/add_task_page.dart';
+import 'package:studypal/routes/app_routes.dart';
 import 'package:studypal/theme/app_colors.dart';
 
 class HomePage extends StatelessWidget {
@@ -40,7 +41,7 @@ class HomePage extends StatelessWidget {
                 SummaryTaskCard(
                   firstCount: controller.completeToday, 
                   secondCount: controller.todoToday, 
-                  onAddTask: () => Get.to(() => const AddTaskPage()),
+                  onAddTask: () => Get.toNamed(AppRoutes.addTask),
                 ), 
                 const SizedBox(height: 24), 
                 TodayPickCard(

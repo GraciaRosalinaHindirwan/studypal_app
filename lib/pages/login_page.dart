@@ -4,6 +4,7 @@ import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_text_field.dart';
 import 'package:studypal/layouts/main_app_layout.dart';
 import 'package:studypal/pages/register_page.dart';
+import 'package:studypal/routes/app_routes.dart';
 import 'package:studypal/services/user_service.dart';
 import 'package:studypal/theme/app_colors.dart';
 import 'package:studypal/theme/app_text_style.dart';
@@ -42,10 +43,11 @@ class _LoginPageState extends State<LoginPage> {
 
   // pushReplacement biar user ga bisa back ke halaman login
   void _goHome(int index) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => MainAppLayout(userIndex: index)),
-    );
+    // Navigator.pushReplacement(
+    //   context,
+    //   MaterialPageRoute(builder: (_) => MainAppLayout(userIndex: index)),
+    // );
+    Get.offNamed(AppRoutes.home, arguments: index);
   }
 
   Future<void> _login() async {
@@ -115,10 +117,11 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const RegisterPage()),
-                  );
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(builder: (_) => const RegisterPage()),
+                  // );
+                  Get.toNamed(AppRoutes.register);
                 },
                 child:  Text(
                   'Belum punya akun? Register',

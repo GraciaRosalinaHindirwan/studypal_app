@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:studypal/models/task.dart';
 import 'package:studypal/controller/theme_controller.dart';
 import 'package:studypal/pages/login_page.dart';
+import 'package:studypal/routes/app_pages.dart';
 import 'package:studypal/services/notification_service.dart';
 import 'package:studypal/models/user_model.dart';
 Future<void> main() async {
@@ -37,7 +38,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginPage(),
+      initialRoute: AppPages.initial, // Buka login dulu
+      getPages: AppPages.pages,        // Daftarkan semua peta halaman
     );
   }
 }
