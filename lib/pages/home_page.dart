@@ -7,6 +7,7 @@ import 'package:studypal/components/summary_task_card.dart';
 import 'package:studypal/components/today_pick_card.dart';
 import 'package:studypal/components/today_plan_progress.dart';
 import 'package:studypal/models/task.dart';
+import 'package:studypal/pages/add_task_page.dart';
 import 'package:studypal/services/task_service.dart';
 import 'package:studypal/theme/app_colors.dart';
 
@@ -42,6 +43,7 @@ class HomePage extends StatelessWidget {
           final totalToday = todayTasks.length;  //berapa banyak tugas hari ini 
           // udh berapa yang selesai 
           final completeToday = todayTasks.where((Task) => Task.isCompleted == true).length; 
+          final todoToday = todayTasks.where((Task) => Task.isCompleted != true).length; 
 
           final int percentage = totalToday == 0
             ? 0
@@ -62,10 +64,7 @@ class HomePage extends StatelessWidget {
             return a.dueDate!.compareTo(b.dueDate!); //yang lebih awal taro atas
           });
 
-          final List<String> todayPickTitles = sortedTodayTask
-            .take(5)
-            .map((Task) => Task.title)
-            .toList(); 
+          final List<Task> todayPickTasks = sortedTodayTask.take(5).toList();
 
           return SingleChildScrollView(
             child: Padding(
@@ -79,23 +78,32 @@ class HomePage extends StatelessWidget {
             
                   TodayPlanProgress(
                     message: progressMessage,
-                    percentage: 75,
+                    percentage: percentage,
                   ), 
             
                   const SizedBox(height: 24,), 
             
                   SummaryTaskCard(
                     firstCount: completeToday, 
-                    secondCount: totalToday, 
+                    secondCount: todoToday, 
                     onAddTask: (){
-                      debugPrint('Add Task clicked');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddTaskPage(),
+                        ),
+                      );
                     }
                   ), 
             
                   const SizedBox(height: 24,), 
                   
                   TodayPickCard(
-                    tasks: todayPickTitles,
+                    tasks: todayPickTasks,
+                    onToggleTask: (task) {
+                      task.isCompleted =!task.isCompleted; 
+                      taskService.updateTask(task); 
+                    }
                   ), 
                 ],
               ),

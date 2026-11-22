@@ -1,31 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:studypal/models/task.dart';
 import 'package:studypal/theme/app_colors.dart';
 import 'package:studypal/theme/app_text_style.dart';
 
-class TodayPickCard extends StatefulWidget {
-  final List<String> tasks;
+class TodayPickCard extends StatelessWidget {
+  final List<Task> tasks;
+  final ValueChanged<Task> onToggleTask;
 
   const TodayPickCard({
     super.key,
     required this.tasks,
+    required this.onToggleTask,
   });
-
-  @override
-  State<TodayPickCard> createState() => _TodayPickCardState();
-}
-
-class _TodayPickCardState extends State<TodayPickCard> {
-  late List<bool> isChecked;
-
-  @override
-  void initState() {
-    super.initState();
-
-    isChecked = List<bool>.filled(
-      widget.tasks.length,
-      false,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,8 +47,11 @@ class _TodayPickCardState extends State<TodayPickCard> {
           // Task List
           Column(
             children: List.generate(
-              widget.tasks.length,
+              tasks.length,
               (index) {
+                final task = tasks[index];
+                final isChecked = task.isCompleted;
+
                 return Padding(
                   padding: const EdgeInsets.only(
                     bottom: 8,
@@ -71,11 +60,9 @@ class _TodayPickCardState extends State<TodayPickCard> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Checkbox(
-                        value: isChecked[index],
-                        onChanged: (value) {
-                          setState(() {
-                            isChecked[index] = value ?? false;
-                          });
+                        value: isChecked,
+                        onChanged: (_) {
+                          onToggleTask(task);
                         },
                         activeColor: AppColors.primary,
                         checkColor: AppColors.background,
@@ -95,14 +82,16 @@ class _TodayPickCardState extends State<TodayPickCard> {
 
                       Expanded(
                         child: Text(
-                          widget.tasks[index],
+                          task.title,
                           style: AppTextStyles.body.copyWith(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                             color: AppColors.primary,
-                            decoration: isChecked[index]
-                                ? TextDecoration.lineThrough
-                                : TextDecoration.none,
+                            decoration: isChecked ? TextDecoration.lineThrough : TextDecoration.none,
+                            decorationThickness: 2.2, 
+                            decorationColor: isChecked
+                              ? AppColors.primary.withValues(alpha: 0.75)
+                              : AppColors.primary,
                           ),
                         ),
                       ),

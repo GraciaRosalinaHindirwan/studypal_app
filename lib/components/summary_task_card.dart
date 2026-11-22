@@ -16,7 +16,7 @@ class SummaryTaskCard extends StatelessWidget {
     this.title = 'Summary Task',
     this.firstLabel = 'Done',
     required this.firstCount,
-    this.secondLabel = 'Done',
+    this.secondLabel = 'ToDo',
     required this.secondCount,
     required this.onAddTask,
   });
