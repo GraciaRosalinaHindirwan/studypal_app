@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:studypal/controller/task_controller.dart';
 import 'package:studypal/models/task.dart';
 import 'package:studypal/models/location.dart';
 import 'package:studypal/pages/pick_location_page.dart';
@@ -140,26 +142,15 @@ class _UpdateTaskPageState extends State<UpdateTaskPage> {
         createdAt: draftTask.createdAt,
       );
       
-      // 4. Akses Hive Box
-      final taskBox = Hive.box<Task>('tasks');
+      // Panggil controller
+      final TaskController controller = Get.find<TaskController>();
 
-      // 5. Buat TaskService
-      final taskService = TaskService(taskBox);
-
-      // 6. Simpan perubahan ke Hive
-      await taskService.updateTask(updatedTask);
-
-      if (!mounted) return;
-
-      // 7. Beri informasi berhasil
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Task berhasil diperbarui!'),
-        ),
-      );
-
-      // 8. Kembali ke halaman sebelumnya
-      Navigator.pop(context, true);
+      // Update lewat controller
+      await controller.updateTask(updatedTask);
+      
+      // Kembali dan beri notifikasi
+      Get.back();
+      Get.snackbar('Sukses', 'Task berhasil diperbarui!');
     } catch (e) {
       if (!mounted) return;
 
