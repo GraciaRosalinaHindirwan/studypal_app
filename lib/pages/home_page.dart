@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
 import 'package:studypal/components/digitalClock/digital_clock.dart';
 import 'package:studypal/components/summary_task_card.dart';
 import 'package:studypal/components/today_pick_card.dart';
 import 'package:studypal/components/today_plan_progress.dart';
 import 'package:studypal/controller/task_controller.dart';
-import 'package:studypal/models/task.dart';
 import 'package:studypal/pages/add_task_page.dart';
-import 'package:studypal/services/task_service.dart';
 import 'package:studypal/theme/app_colors.dart';
 
 class HomePage extends StatelessWidget {

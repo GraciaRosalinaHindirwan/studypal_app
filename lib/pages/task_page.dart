@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_button_secondary.dart';
+import 'package:studypal/controller/task_controller.dart';
 import 'package:studypal/models/task.dart';
 import 'package:studypal/services/task_service.dart';
 import 'package:studypal/services/notification_service.dart';
@@ -31,36 +33,6 @@ class _TaskPageState extends State<TaskPage> {
     searchController.dispose();
     super.dispose();
   }
-
-  Future<void> deleteTask(Task task) async{
-    try {
-      // batalkan semua notifikasi terjadwal untuk task ini
-      await NotificationService.instance.cancelTaskReminders(task);
-
-      // akses hive box
-      final taskBox = Hive.box<Task>('tasks');
-      final taskService = TaskService(taskBox);
-
-      // menghapus task id
-      await taskService.deleteTask(task.id);
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Task berhasil dihapus!'),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal menghapus task: $e'),
-        ),
-      );
-    }
-  }
-
   
   Future<void> confirmDelete(Task task) async {
     final confirmed = await showDialog<bool>(
@@ -182,7 +154,16 @@ class _TaskPageState extends State<TaskPage> {
     );
 
     if (confirmed == true) {
-      await deleteTask(task);
+      try {
+        final controller = Get.find<TaskController>();
+        await controller.deleteTask(task);
+        
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menghapus task: $e')),
+        );
+      }
     }
   }
 
@@ -380,108 +361,102 @@ class _TaskPageState extends State<TaskPage> {
 
   @override
   Widget build(BuildContext context) {
-    final taskBox = Hive.box<Task>('tasks');
-    final taskService = TaskService(taskBox);
+    //ambil instance controller yang sudah pernah dibuat (home) 
+    final TaskController controller = Get.find<TaskController>();
 
-    return ValueListenableBuilder(
-      valueListenable: taskBox.listenable(),
-      builder: (context, box, child) {
-        final tasks = taskService.getTasks();
+    return Obx((){
+      // Ambil list tasks langsung dari controller!
+      final tasks = controller.tasks;
 
-        final filteredTasks = tasks.where((task) {
-          final matchStatus =
-              statusFilter == null || task.isCompleted == statusFilter;
+      final filteredTasks = tasks.where((task) {
+        final matchStatus = statusFilter == null || task.isCompleted == statusFilter;
+        final matchSearch = task.title.toLowerCase().contains(searchQuery.toLowerCase());
+        return matchStatus && matchSearch;
+      }).toList();
 
-          final matchSearch =
-              task.title.toLowerCase().contains(searchQuery.toLowerCase());
-
-          return matchStatus && matchSearch;
-        }).toList();
-
-        return Material(
-          color: AppColors.background, 
-          child: Stack(
-            children: [
-              ListView(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 96),
-                children: [
-                  const Text(
-                    '“Stay on Track with Your Tasks”',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 20,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    spacing: 8,
-                    children: [
-                      Expanded(
-                        child: AppTextField(
-                          hint: 'Search Your Task',
-                          controller: searchController,
-                          onChanged: (value) => setState(() => searchQuery = value),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: showFilterSheet,
-                        child: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(Icons.filter_list, color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  for (final task in filteredTasks)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 32),
-                    child: GestureDetector(
-                      onTap: () {
-                        showTaskDetail(task);
-                      },
-                      child: TaskCard(
-                        title: task.title,
-                        dateTime: formatTaskDate(task.dueDate),
-                        isDone: task.isCompleted,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Positioned(
-                right: 24,
-                bottom: 24,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const AddTaskPage()),
-                    );
-                  },
-                  child: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: AppColors.accent,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.primary, width: 3),
-                    ),
-                    child: const Icon(Icons.add, color: AppColors.primary, size: 28),
+      return Material(
+        color: AppColors.background, 
+        child: Stack(
+          children: [
+            ListView(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 96),
+              children: [
+                const Text(
+                  '“Stay on Track with Your Tasks”',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 20,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
+                const SizedBox(height: 24),
+                Row(
+                  spacing: 8,
+                  children: [
+                    Expanded(
+                      child: AppTextField(
+                        hint: 'Search Your Task',
+                        controller: searchController,
+                        onChanged: (value) => setState(() => searchQuery = value),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: showFilterSheet,
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.filter_list, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                for (final task in filteredTasks)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 32),
+                  child: GestureDetector(
+                    onTap: () {
+                      showTaskDetail(task);
+                    },
+                    child: TaskCard(
+                      title: task.title,
+                      dateTime: formatTaskDate(task.dueDate),
+                      isDone: task.isCompleted,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Positioned(
+              right: 24,
+              bottom: 24,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AddTaskPage()),
+                  );
+                },
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: AppColors.accent,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.primary, width: 3),
+                  ),
+                  child: const Icon(Icons.add, color: AppColors.primary, size: 28),
+                ),
               ),
-            ],
-          ),
-        );
-      },
-    );
+            ),
+          ],
+        ),
+      );
+    });
   }
 }
