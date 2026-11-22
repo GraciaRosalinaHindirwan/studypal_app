@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:studypal/controller/task_controller.dart';
 import 'package:studypal/models/task.dart';
 import 'package:studypal/models/location.dart';
 import 'package:studypal/pages/pick_location_page.dart';
 import 'package:studypal/services/notification_service.dart';
-import 'package:studypal/services/task_service.dart';
 
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_button_secondary.dart';

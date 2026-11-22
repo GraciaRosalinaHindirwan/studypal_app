@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:studypal/controller/task_controller.dart';
 import 'package:studypal/services/notification_service.dart';
 import 'package:studypal/services/task_service.dart';
 
@@ -127,21 +129,15 @@ class _AddTaskPageState extends State<AddTaskPage> {
         createdAt: task.createdAt,
       );
 
-      //menghubungkan dengan Hive
-      final taskBox = Hive.box<Task>('tasks'); 
-      final taskService = TaskService(taskBox); 
+      // 1. Panggil controller yang sudah ada
+      final TaskController controller = Get.find<TaskController>();
 
-      //simpan task 
-      await taskService.addTask(task); 
-
-      if (!mounted) return; 
-
-      //menampilkan pesan berhasil 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Task berhasil ditambahkan!"))
-      );
-
-      Navigator.pop(context, true);
+      // 2. Simpan task lewat controller
+      await controller.addTask(taskToSave);
+      
+      // 3. Tampilkan pesan & kembali ke halaman sebelumnya
+      Get.back();
+      Get.snackbar('Sukses', 'Task berhasil ditambahkan!');
       
     } catch (e) {
       if (!mounted) return;
