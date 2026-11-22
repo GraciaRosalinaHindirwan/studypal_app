@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:studypal/components/app_button.dart';
 import 'package:studypal/components/app_button_secondary.dart';
 import 'package:studypal/components/app_text_field.dart';

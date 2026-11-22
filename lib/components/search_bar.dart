@@ -5,7 +5,7 @@ import 'package:studypal/theme/app_text_style.dart';
 class SearchBar extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
-  final VoidCallback onFilterTap;
+  final VoidCallback onSearchTap;
   final double height;
   final double buttonSize;
 
@@ -13,7 +13,7 @@ class SearchBar extends StatelessWidget {
     super.key,
     required this.controller,
     required this.onChanged,
-    required this.onFilterTap,
+    required this.onSearchTap,
     this.height = 72,
     this.buttonSize = 72,
   });
@@ -52,21 +52,21 @@ class SearchBar extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         GestureDetector(
-          onTap: onFilterTap,
-          child: Container(
-            width: buttonSize,
-            height: buttonSize,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.tune,
-              color: AppColors.background,
-              size: 24,
-            ),
+        onTap: onSearchTap,
+        child: Container(
+          width: buttonSize,
+          height: buttonSize,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(
+            Icons.search,
+            color: AppColors.background,
+            size: 24,
           ),
         ),
+      ),
       ],
     );
   }

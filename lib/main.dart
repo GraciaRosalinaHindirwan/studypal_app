@@ -5,6 +5,7 @@ import 'package:studypal/models/task.dart';
 import 'package:studypal/pages/add_task_page.dart';
 import 'package:studypal/pages/pick_location_page.dart';
 import 'package:studypal/pages/task_page.dart';
+import 'package:studypal/services/notification_service.dart';
 
 Future<void> main() async {
   // memastikan flutter siap 
@@ -18,6 +19,8 @@ Future<void> main() async {
 
   //membuka box 
   await Hive.openBox<Task>('tasks');
+
+  await NotificationService.instance.init();
 
   runApp(const MyApp());
 }

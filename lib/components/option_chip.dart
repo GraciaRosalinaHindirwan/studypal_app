@@ -24,15 +24,20 @@ class OptionChip extends StatelessWidget {
           border: Border.all(color: AppColors.secondary, width: 1.5),
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           spacing: 4,
           children: [
-            Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.secondary,
-                fontSize: 12,
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w600,
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.secondary,
+                  fontSize: 12,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             Icon(icon, size: 20, color: AppColors.secondary),
